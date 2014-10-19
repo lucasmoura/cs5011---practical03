@@ -7,40 +7,38 @@ public class Graph
 {
 
 	private HashMap< Integer, ArrayList<Cave>> vertexMap;
+	private Cave[] caves;
 	
-	private static int INVALID_VERTEX_VALUE = -1;
 	private static int VERTEX_ALREADY_IN_GRAPH = -2;
 	private static int VERTEX_ADDED_TO_GRAPH = 0;
 	private static int VERTEX_NOT_FOUND = -1;
-	private static int EDGE_COST_UPGRADED = 1;
 	private static int EDGE_CREATED_SUCCESSFULLY = 0;
-	private static int EDGE_NOT_UPGRADED = -1;
 	
 	public Graph()
 	{
 		vertexMap = new HashMap<Integer, ArrayList<Cave>>();
+		caves = new Cave[21];
 	}
 	
 	public void printGraph()
 	{
 		
 		System.out.println("Printing graph structure...");
-		System.out.println(vertexMap.size());
 		
-		for (Integer musicId: vertexMap.keySet()) 
+		for (Integer caveId: vertexMap.keySet()) 
 		{
-			System.out.println("Entrou aqui");
 			
-			System.out.println("Music: "+ musicId);
-			System.out.println("Total Edges: "+vertexMap.get(musicId).size());
+			System.out.println("Cave: "+ caveId);
+			System.out.println("Type: "+caves[caveId].getType());
+			System.out.println("Total Edges: "+vertexMap.get(caveId).size());
 			
-			for (Cave cave : vertexMap.get(musicId)) 
+			for (Cave cave : vertexMap.get(caveId)) 
 			{
-				//Long id = edge.getMusicId();
-				//Integer cost = edge.getCost();
-				
-				//System.out.println(musicId + "-->" + id + ", Cost= "+cost );
+				int id = cave.getId();
+				System.out.println(caveId + "-->" + id);
 			}
+			
+			System.out.println();
 		}
 	}
 	
@@ -49,7 +47,7 @@ public class Graph
 		return vertexMap.size();
 	}
 	
-	public int addVertex(int id)
+	public int addVertex(int id, int type)
 	{
 		
 		if(vertexMap.get(id) != null)
@@ -58,7 +56,9 @@ public class Graph
 		
 		ArrayList<Cave> edge = new ArrayList<Cave>();
 		
+		caves[id] = new Cave(id, type);
 		vertexMap.put(id, edge);
+		
 		
 		return VERTEX_ADDED_TO_GRAPH;
 		
@@ -67,28 +67,18 @@ public class Graph
 	public ArrayList<Cave> getVertex(int id)
 	{
 		
-		ArrayList<Cave> edge =vertexMap.get(id);
-		
-		/*if(edge != null)
-			Collections.sort(edge);*/
-		
-		return edge;
+		return vertexMap.get(id);
 	}
 	
 	public int addEdge(int from, int to)
 	{
 		
 		ArrayList<Cave> edgeFrom = vertexMap.get(from);
-		ArrayList<Cave> edgeTo = vertexMap.get(to);
 		
 		if(edgeFrom == null)
 			return VERTEX_NOT_FOUND;
 		
-		if(edgeTo == null)
-			return VERTEX_NOT_FOUND;
-		
-		
-		edgeFrom.add(new Cave());		
+		edgeFrom.add(caves[to]);		
 	
 		return EDGE_CREATED_SUCCESSFULLY;
 		
