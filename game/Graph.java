@@ -64,10 +64,9 @@ public class Graph
 		
 	}
 	
-	public ArrayList<Cave> getVertex(int id)
+	public Cave getCave(int id)
 	{
-		
-		return vertexMap.get(id);
+		return caves[id];
 	}
 	
 	public int addEdge(int from, int to)
@@ -81,6 +80,18 @@ public class Graph
 		edgeFrom.add(caves[to]);		
 	
 		return EDGE_CREATED_SUCCESSFULLY;
+		
+	}
+
+	public ArrayList<Cave> getEdges(int actualPosition) 
+	{
+		return vertexMap.get(actualPosition);
+	}
+	
+	public void clear()
+	{
+		for (Integer caveId: vertexMap.keySet()) 
+			vertexMap.get(caveId).clear();
 		
 	}
 	

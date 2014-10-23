@@ -11,11 +11,21 @@ import java.util.ArrayList;
 public class Map 
 {
 	private Graph gameMap;
+	private static Map instance = null;
 	
-	public Map()
+	public static Map getInstance()
+	{
+		if(instance == null)
+			instance = new Map();
+		
+		return instance;
+	}
+	
+	private Map()
 	{
 		gameMap = new Graph();
 	}
+
 	
 	public void initMap()
 	{
@@ -227,9 +237,9 @@ public class Map
 		
 	}
 	
-	public ArrayList<Cave> getCave(int cave)
+	public ArrayList<Cave> getAdjacentCaves(int caveId)
 	{
-		return gameMap.getVertex(cave);
+		return gameMap.getEdges(caveId);
 	}
 	
 	public void printMap()
@@ -279,6 +289,21 @@ public class Map
 		}
 
 		
+	}
+
+	public ArrayList<Cave> getChamberEdges(int actualPosition) 
+	{
+		return gameMap.getEdges(actualPosition);
+	}
+	
+	public Cave getCave(int caveId)
+	{
+		return gameMap.getCave(caveId);
+	}
+	
+	public void clear()
+	{
+		gameMap.clear();
 	}
 	
 	
