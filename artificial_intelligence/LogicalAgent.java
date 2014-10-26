@@ -26,13 +26,14 @@ public class LogicalAgent implements Player
 	private boolean smell;
 	private boolean squish;
 	
-	private HashMap<Integer, Boolean> visitedCaves;
+	private KnowledgeBase knowledgeBase;
 	
 	public LogicalAgent(int position)
 	{
 		this.position = position;
 		status = ALIVE;
 		breeze = smell = squish = false;
+		knowledgeBase = new KnowledgeBase();
 	}
 
 	@Override
@@ -54,6 +55,23 @@ public class LogicalAgent implements Player
 	@Override
 	public int move() 
 	{
+		ArrayList<Cave> adjacentCaves = Map.getInstance().getAdjacentCaves(position);
+		ArrayList<Cave> visited = new ArrayList<Cave>();
+		
+		for(int i =0; i<adjacentCaves.size(); i++)
+		{
+			int caveIndex = adjacentCaves.get(i).getId();
+			
+			if(adjacentCaves.get(i).hasBat())
+				squish = true;
+			else if(adjacentCaves.get(i).hasPit())
+				breeze = true;
+			else if(adjacentCaves.get(i).hasWumpus())
+				smell = true;
+			
+			if(knowledgeBase.isVisited(caveIndex) == true)
+				visited.add(Map.getInstance().getCave(caveIndex));
+		}
 		
 		checkPositionStatus();
 		
@@ -69,32 +87,10 @@ public class LogicalAgent implements Player
 		else if(status == WON)
 			return VICTORY;
 		
-		ArrayList<Cave> adjacentCaves =
-				Map.getInstance().getChamberEdges(position);
-		
-		ArrayList<Cave> availableMovements = new ArrayList<Cave>();
-		ArrayList<Cave> visitedCaves = new ArrayList<Cave>();
-		
-		breeze = smell = squish = false;
-		
-		for(int i =0; i<adjacentCaves.size(); i++)
-		{
-			if(adjacentCaves.get(i).hasBat())
-				squish = true;
-			else if(adjacentCaves.get(i).hasPit())
-				breeze = true;
-			else if(adjacentCaves.get(i).hasWumpus())
-				smell = true;
-			
-			if(adjacentCaves.get(i).isVisited() == false)
-				availableMovements.add(adjacentCaves.get(i));
-			else
-				visitedCaves.add(adjacentCaves.get(i));
-		}
-		
-		position = createBestMove(availableMovements, visitedCaves);
+		position = createBestMove(adjacentCaves, visited);
 		
 		System.out.println("Player has moved to the following position: "+position);
+		breeze = smell = squish = false;
 		
 		return CONTINUE;
 	}
@@ -107,7 +103,14 @@ public class LogicalAgent implements Player
 		{
 			case Cave.EMPTY:
 				status = ALIVE;
-				cave.markAsVisited();
+				knowledgeBase.setVisited(cave.getId());
+				knowledgeBase.setEmpty(cave.getId(), true);
+				knowledgeBase.setBat(cave.getId(), false);
+				knowledgeBase.setPit(cave.getId(), false);
+				knowledgeBase.setWumpus(cave.getId(), false);
+				knowledgeBase.setBreeze(cave.getId(), breeze);
+				knowledgeBase.setSmell(cave.getId(), smell);
+				knowledgeBase.setSound(cave.getId(), squish);
 				break;
 		
 			case Cave.PIT:
@@ -121,67 +124,39 @@ public class LogicalAgent implements Player
 			
 			case Cave.BAT:
 				status = BAT;
+				knowledgeBase.setVisited(cave.getId());
+				knowledgeBase.setEmpty(cave.getId(), false);
+				knowledgeBase.setBat(cave.getId(), true);
+				knowledgeBase.setPit(cave.getId(), false);
+				knowledgeBase.setWumpus(cave.getId(), false);
+				knowledgeBase.setBreeze(cave.getId(), breeze);
+				knowledgeBase.setSmell(cave.getId(), smell);
+				knowledgeBase.setSound(cave.getId(), squish);
 				break;
 		}
-		
-		breeze = smell = squish = false;
 		
 	}
 	
 	private int createBestMove
-		(ArrayList<Cave> availableMovements, ArrayList<Cave> visitedCaves)
+		(ArrayList<Cave> adjacentCaves, ArrayList<Cave> visited)
 	{
 		
 		Random rand = new Random();
 		int movement;
 		
-		if(availableMovements.size() == 3)
-		{	
-			movement = rand.nextInt(3);
-			return availableMovements.get(movement).getId();
-		}
-		else if(availableMovements.size() == 2)
+		if(visited.size() == 0)
 		{
-			movement = rand.nextInt(2);
-			
-			if(breeze == true)
-			{
-				ArrayList<Cave> pastCave = Map.getInstance().getChamberEdges(visitedCaves.get(0).getId());
-				boolean back = true;
-				
-				for(int i =0; i<pastCave.size(); i++)
-				{
-					if(pastCave.get(i).hasPit())
-						back = false;
-				}
-				
-				if(back)
-					return visitedCaves.get(0).getId();
-				else if(smell == true)
-				{
-					Cave cave = availableMovements.get(movement);
-					return attackWumpus(movement, cave);
-				}
-				else
-					return availableMovements.get(movement).getId();
-					
-			}
-			else if(smell == true)
-			{
-				Cave cave = availableMovements.get(movement);
-				return attackWumpus(movement, cave);
-			}
-			else if(breeze == true && squish == true)
-				return availableMovements.get(movement).getId();
-			else if(smell == true && squish == true)
-				return availableMovements.get(movement).getId();
-			else
-				return availableMovements.get(movement).getId();
-				
+			movement = rand.nextInt(3)+1;
+			return adjacentCaves.get(movement).getId();
 		}
-		else
-			return availableMovements.get(0).getId();
 		
+		
+		if(breeze == true || smell == true)
+		{
+			
+		}
+		
+		return 1;
 	}
 	
 	public int generateNewPosition()
@@ -240,5 +215,51 @@ public class LogicalAgent implements Player
 		cave.setType(Cave.EMPTY);
 	}
 
+//	if(availableMovements.size() == 3)
+//	{	
+//		movement = rand.nextInt(3);
+//		return availableMovements.get(movement).getId();
+//	}
+//	else if(availableMovements.size() == 2)
+//	{
+//		movement = rand.nextInt(2);
+//		
+//		if(breeze == true)
+//		{
+//			ArrayList<Cave> pastCave = Map.getInstance().getChamberEdges(visitedCaves.get(0).getId());
+//			boolean back = true;
+//			
+//			for(int i =0; i<pastCave.size(); i++)
+//			{
+//				if(pastCave.get(i).hasPit())
+//					back = false;
+//			}
+//			
+//			if(back)
+//				return visitedCaves.get(0).getId();
+//			else if(smell == true)
+//			{
+//				Cave cave = availableMovements.get(movement);
+//				return attackWumpus(movement, cave);
+//			}
+//			else
+//				return availableMovements.get(movement).getId();
+//				
+//		}
+//		else if(smell == true)
+//		{
+//			Cave cave = availableMovements.get(movement);
+//			return attackWumpus(movement, cave);
+//		}
+//		else if(breeze == true && squish == true)
+//			return availableMovements.get(movement).getId();
+//		else if(smell == true && squish == true)
+//			return availableMovements.get(movement).getId();
+//		else
+//			return availableMovements.get(movement).getId();
+//			
+//	}
+//	else
+//		return availableMovements.get(0).getId();
 	
 }

@@ -10,28 +10,16 @@ public class Cave
 	
 	private int type;
 	private int id;
-	private boolean isVisited;
 	
 	public Cave(int id, int type)
 	{
 		this.id = id;
 		this.type = type;
-		this.isVisited = false;
 	}
 	
 	public void setType(int type)
 	{
 		this.type = type;
-	}
-	
-	public void markAsVisited()
-	{
-		isVisited = true;
-	}
-	
-	public boolean isVisited()
-	{
-		return isVisited;
 	}
 	
 	public int getType()
