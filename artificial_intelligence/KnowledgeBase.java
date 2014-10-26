@@ -5,11 +5,85 @@ import game.Map;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Stack;
 
 public class KnowledgeBase
 {
 	
+	public class PremisseComparator implements Comparator<Premisse>
+	{
+	
+		@Override
+		public int compare(Premisse p1, Premisse p2)
+		{
+			int[] probability01 = p1.getProbability();
+			int[] probability02 = p2.getProbability();
+			
+			if(probability01[0] == probability02[0])
+			{
+				
+				if(probability01[1] == probability02[1])
+				{
+					if(probability01[2] == probability02[2])
+					{
+						if(p1.getLocation()>p2.getLocation())
+							return 1;
+						else if(p1.getLocation()<p2.getLocation())
+							return -1;
+						else
+							return 0;
+					}
+					else
+					{
+						if(probability01[2]==Cave.EMPTY)
+							return -1;
+						else if(probability02[2] == Cave.EMPTY)
+							return 1;
+						else if(probability01[2]==Cave.WUMPUS)
+							return 1;
+						else if(probability02[2] == Cave.WUMPUS)
+							return -1;
+						else if(probability01[2]==Cave.BAT)
+							return -1;
+						else
+							return 1;
+					}
+				}
+				else if(probability01[1]==Cave.EMPTY)
+					return -1;
+				else if(probability02[1] == Cave.EMPTY)
+					return 1;
+				else if(probability01[1]==Cave.WUMPUS)
+					return 1;
+				else if(probability02[1] == Cave.WUMPUS)
+					return -1;
+				else if(probability01[1]==Cave.BAT)
+					return -1;
+				else
+					return 1;
+				
+			}
+			else
+			{
+				if(probability01[0]==Cave.EMPTY)
+					return -1;
+				else if(probability02[0] == Cave.EMPTY)
+					return 1;
+				else if(probability01[0]==Cave.WUMPUS)
+					return 1;
+				else if(probability02[0] == Cave.WUMPUS)
+					return -1;
+				else if(probability01[0]==Cave.BAT)
+					return -1;
+				else
+					return 1;
+			}
+				
+		}
+	}	
+		
 	private CaveInfo[] caveInfo;
 	
 	public KnowledgeBase()
@@ -29,8 +103,8 @@ public class KnowledgeBase
 	{
 		Stack<Cave> caves = new Stack<Cave>();
 		ArrayList<Cave> visitedCaves = new ArrayList<Cave>();
-		int[] storedCaves = new int[21];
 		
+		int[] storedCaves = new int[21];
 		Arrays.fill(storedCaves, 0);
 		
 		Cave cave = Map.getInstance().getCave(actualPosition);
@@ -46,10 +120,6 @@ public class KnowledgeBase
 			
 			ArrayList<Cave> adjacentCaves =  Map.getInstance().
 					getChamberEdges(c.getId());
-			
-//			System.out.println("Cave id: "+c.getId());
-//			System.out.println("Adjacent size: "+adjacentCaves.size());
-//			System.out.println("marked: "+storedCaves[c.getId()]);
 			
 			for(int i =0; i<adjacentCaves.size(); i++)
 			{
@@ -101,12 +171,14 @@ public class KnowledgeBase
 				if(adjacentCave.isVisited() == true)
 				{
 					System.out.println("Visisted cave: "+adjacentId);
+					System.out.println("Type: "+Map.getInstance().getCave(adjacentId).getType());
 					Premisse premisse;
 					
 					switch(Map.getInstance().getCave(adjacentId).getType())
 					{
 						case Cave.BAT:
 							sound = false;
+							System.out.println("Add premisse with location: "+adjacentId);
 							premisse = new Premisse(adjacentId);
 							premisse.setProbability(Cave.BAT);
 							premisses.add(premisse);
@@ -114,6 +186,7 @@ public class KnowledgeBase
 						
 						case Cave.PIT:
 							breeze = false;
+							System.out.println("Add premisse with location: "+adjacentId);
 						    premisse = new Premisse(adjacentId);
 						    premisse.setProbability(Cave.PIT);
 						    premisses.add(premisse);
@@ -121,6 +194,7 @@ public class KnowledgeBase
 						
 						case Cave.WUMPUS:
 							smell = false;
+							System.out.println("Add premisse with location: "+adjacentId);
 							premisse = new Premisse(adjacentId);
 							premisse.setProbability(Cave.WUMPUS);
 							premisses.add(premisse);
@@ -182,6 +256,7 @@ public class KnowledgeBase
 				if(adjacentCave.hasPit() == true)
 				{
 					premisse.setProbability(Cave.PIT);
+					System.out.println("Add premisse with location: "+adjacentId);
 					premisses.add(premisse);
 					continue;
 				}
@@ -191,6 +266,7 @@ public class KnowledgeBase
 				if(adjacentCave.hasBat() == true)
 				{
 					premisse.setProbability(Cave.BAT);
+					System.out.println("Add premisse with location: "+adjacentId);
 					premisses.add(premisse);
 					continue;
 				}
@@ -200,6 +276,7 @@ public class KnowledgeBase
 				if(adjacentCave.hasWumpus() == true)
 				{
 					premisse.setProbability(Cave.WUMPUS);
+					System.out.println("Add premisse with location: "+adjacentId);
 					premisses.add(premisse);
 					continue;
 				}
@@ -213,6 +290,7 @@ public class KnowledgeBase
 					premisse.setProbability(Cave.EMPTY);
 				}
 				
+				System.out.println("Add premisse with location: "+adjacentId);
 				premisses.add(premisse);
 			}
 			
@@ -222,7 +300,7 @@ public class KnowledgeBase
 		return premisses;
 	}
 	
-	private boolean makeInference(int father, int adjacentId, int unknown, int[] sensations) 
+	public boolean makeInference(int father, int adjacentId, int unknown, int[] sensations) 
 	{
 		if(caveInfo[adjacentId].isVisited())
 			return false;
@@ -231,6 +309,9 @@ public class KnowledgeBase
 		boolean sound = caveInfo[father].feelSound();
 		boolean smell = caveInfo[father].feelSmell();
 		
+//		System.out.println("Father: "+father);
+//		System.out.println("Inference: "+adjacentId);
+//		
 		if(breeze && sound && !smell && sensations[0] == 1 && sensations[2] == 1 && unknown == 1)
 		{
 			caveInfo[adjacentId].setPit(false);
@@ -369,6 +450,11 @@ public class KnowledgeBase
 		
 		return false;
 		
+	}
+	
+	public void orderPremisses(ArrayList<Premisse> premisses)
+	{
+		Collections.sort(premisses, new PremisseComparator());
 	}
 
 	public int getNumEmptyCaves(boolean breeze, boolean sound, boolean smell)

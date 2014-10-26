@@ -89,7 +89,7 @@ public class KnowledgeBaseTest
 	@Test
 	public void generatePremissesTest()
 	{
-		System.out.println("generatePremissesTest");
+		System.out.println("\ngeneratePremissesTest\n");
 		
 		int actualPosition = 3;
 		int[] nodes = {3,11,1,4};
@@ -97,6 +97,9 @@ public class KnowledgeBaseTest
 		
 		knowledgeBase.setBreeze(actualPosition, true);
 		knowledgeBase.setEmpty(actualPosition, true);
+		knowledgeBase.setBat(actualPosition, false);
+		knowledgeBase.setPit(actualPosition, false);
+		knowledgeBase.setWumpus(actualPosition, false);
 		knowledgeBase.setSmell(actualPosition, false);
 		knowledgeBase.setSound(actualPosition, false);
 		
@@ -123,6 +126,7 @@ public class KnowledgeBaseTest
 		
 		Map.getInstance().getCave(11).setType(Cave.BAT);
 		Map.getInstance().getCave(6).setType(Cave.PIT);
+		Map.getInstance().getCave(3).setType(Cave.EMPTY);
 		
 		ArrayList<Cave> visitedCaves = knowledgeBase.
 				createVisitedCaves(actualPosition);
@@ -234,6 +238,102 @@ public class KnowledgeBaseTest
 		assertEquals(expectedLocation, actualPremisse.get(2).getLocation());
 		for(int i =0; i<3; i++)
 			assertEquals(actualPremisse03[i], expectedPremisse03[i]);
+		
+	}
+	
+	@Test
+	public void makeInferenceTest()
+	{
+		
+		System.out.println("makeInferenceTest");
+		
+		int actualPosition = 1;
+		int[] nodes = {1,11,3};
+		setVisitedNodes(nodes);
+		
+		knowledgeBase.setBreeze(actualPosition, true);
+		knowledgeBase.setEmpty(actualPosition, true);
+		knowledgeBase.setSmell(actualPosition, false);
+		knowledgeBase.setSound(actualPosition, true);
+		
+		knowledgeBase.setBreeze(11, false);
+		knowledgeBase.setEmpty(11, false);
+		knowledgeBase.setSmell(11, false);
+		knowledgeBase.setSound(11, false);
+		knowledgeBase.setBat(11, true);
+		
+		knowledgeBase.setBreeze(3, false);
+		knowledgeBase.setEmpty(3, true);
+		knowledgeBase.setSmell(3, false);
+		knowledgeBase.setSound(3, false);
+		knowledgeBase.setBat(3, false);
+		
+		knowledgeBase.setVisited(actualPosition);
+		knowledgeBase.setVisited(3);
+		
+		Map.getInstance().getCave(11).setType(Cave.BAT);
+		Map.getInstance().getCave(3).setType(Cave.PIT);
+		
+		boolean expectedValue = true;
+		boolean actualValue = false;
+		
+		int father = 1;
+		int adjacentId = 2;
+		int unknown = 1;
+		int sensations[] = new int[3];
+		sensations[0] = 1;
+		sensations[1]=0;
+		sensations[2] = 1;
+		
+		actualValue = knowledgeBase.makeInference(father, adjacentId, unknown, sensations);
+		
+		assertEquals(expectedValue, actualValue);
+		assertEquals(expectedValue, knowledgeBase.isEmpty(2));
+		
+		
+	}
+	
+	@Test
+	public void orderPremissesTest()
+	{
+		ArrayList<Premisse> premisses = new ArrayList<Premisse>();
+		
+		Premisse premisse01 = new Premisse(1);
+		premisse01.setProbability(Cave.EMPTY);
+		
+		Premisse premisse02 = new Premisse(2);
+		premisse02.setProbability(Cave.PIT);
+		premisse02.setProbability(Cave.BAT);
+		
+		Premisse premisse03 = new Premisse(3);
+		premisse03.setProbability(Cave.PIT);
+		premisse03.setProbability(Cave.WUMPUS);
+		
+		Premisse premisse04 = new Premisse(4);
+		premisse04.setProbability(Cave.PIT);
+		premisse04.setProbability(Cave.EMPTY);
+		
+		Premisse premisse05 = new Premisse(5);
+		premisse05.setProbability(Cave.EMPTY);
+		
+		Premisse premisse06 = new Premisse(6);
+		premisse06.setProbability(Cave.PIT);
+		premisse06.setProbability(Cave.BAT);
+		premisse06.setProbability(Cave.WUMPUS);
+		
+		premisses.add(premisse05);
+		premisses.add(premisse03);
+		premisses.add(premisse01);
+		premisses.add(premisse04);
+		premisses.add(premisse02);
+		
+		Premisse[] expectedPremisses = {premisse01, premisse05, premisse04, premisse02, premisse03, premisse06};
+		
+		
+		knowledgeBase.orderPremisses(premisses);
+		
+		for(int i =0; i<premisses.size(); i++)
+			assertEquals(expectedPremisses[i], premisses.get(i));
 		
 	}
 	
