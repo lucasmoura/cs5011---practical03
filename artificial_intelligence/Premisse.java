@@ -6,10 +6,12 @@ public class Premisse
 {
 	private int[] probability;
 	private int location;
+	private int father;
 	
-	public Premisse(int location)
+	public Premisse(int location, int father)
 	{
 		this.location = location;
+		this.father = father;
 		probability = new int[3];
 		Arrays.fill(probability, -1);
 	}
@@ -47,7 +49,13 @@ public class Premisse
 	{
 		this.probability = probability;
 	}
-	
-	
+
+	public int getFather() {
+		return father;
+	}
+
+	public void setFather(int father) {
+		this.father = father;
+	}
 	
 }

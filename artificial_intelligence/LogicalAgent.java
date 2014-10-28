@@ -55,12 +55,11 @@ public class LogicalAgent implements Player
 	@Override
 	public int move() 
 	{
+		
 		ArrayList<Cave> adjacentCaves = Map.getInstance().getAdjacentCaves(position);
-		ArrayList<Cave> visited = new ArrayList<Cave>();
 		
 		for(int i =0; i<adjacentCaves.size(); i++)
 		{
-			int caveIndex = adjacentCaves.get(i).getId();
 			
 			if(adjacentCaves.get(i).hasBat())
 				squish = true;
@@ -68,9 +67,6 @@ public class LogicalAgent implements Player
 				breeze = true;
 			else if(adjacentCaves.get(i).hasWumpus())
 				smell = true;
-			
-			if(knowledgeBase.isVisited(caveIndex) == true)
-				visited.add(Map.getInstance().getCave(caveIndex));
 		}
 		
 		checkPositionStatus();
@@ -87,12 +83,66 @@ public class LogicalAgent implements Player
 		else if(status == WON)
 			return VICTORY;
 		
-		position = createBestMove(adjacentCaves, visited);
+		Premisse premisse = knowledgeBase.ask(position);
+		boolean validPosition = false;
 		
-		System.out.println("Player has moved to the following position: "+position);
+		for(int i =0; i<adjacentCaves.size(); i++)
+		{
+			if(premisse.getFather() == adjacentCaves.get(i).getId())
+			{
+				position = premisse.getFather();
+				validPosition = true;
+				break;
+			}	
+				
+		}
+		
+		if(!validPosition)
+			position = premisse.getLocation();
+		
+		
 		breeze = smell = squish = false;
+		System.out.println("Player has moved to the following position: "+position);
 		
 		return CONTINUE;
+		
+//		ArrayList<Cave> visited = new ArrayList<Cave>();
+//		
+//		for(int i =0; i<adjacentCaves.size(); i++)
+//		{
+//			int caveIndex = adjacentCaves.get(i).getId();
+//			
+//			if(adjacentCaves.get(i).hasBat())
+//				squish = true;
+//			else if(adjacentCaves.get(i).hasPit())
+//				breeze = true;
+//			else if(adjacentCaves.get(i).hasWumpus())
+//				smell = true;
+//			
+//			if(knowledgeBase.isVisited(caveIndex) == true)
+//				visited.add(Map.getInstance().getCave(caveIndex));
+//		}
+//		
+//		checkPositionStatus();
+//		
+//		if(status == DEAD)
+//			return GAMEOVER;
+//		else if(status == BAT)
+//		{
+//			System.out.println("Player has encountered a Bat!!");
+//			position = generateNewPosition();
+//			System.out.println("Player new position is: "+position);
+//			return CONTINUE;
+//		}
+//		else if(status == WON)
+//			return VICTORY;
+//		
+//		position = createBestMove(adjacentCaves, visited);
+//		
+//		System.out.println("Player has moved to the following position: "+position);
+//		breeze = smell = squish = false;
+//		
+//		return CONTINUE;
 	}
 
 	private void checkPositionStatus()
@@ -137,28 +187,6 @@ public class LogicalAgent implements Player
 		
 	}
 	
-	private int createBestMove
-		(ArrayList<Cave> adjacentCaves, ArrayList<Cave> visited)
-	{
-		
-		Random rand = new Random();
-		int movement;
-		
-		if(visited.size() == 0)
-		{
-			movement = rand.nextInt(3)+1;
-			return adjacentCaves.get(movement).getId();
-		}
-		
-		
-		if(breeze == true || smell == true)
-		{
-			
-		}
-		
-		return 1;
-	}
-	
 	public int generateNewPosition()
 	{
 		Random rand = new Random();
@@ -168,8 +196,9 @@ public class LogicalAgent implements Player
 		do
 		{
 			position = rand.nextInt(20)+1;
+			int id =Map.getInstance().getCave(position).getType();
 			
-			if(Map.getInstance().getCave(position).getType() == Cave.PIT)
+			if( id== Cave.PIT || id == Cave.PIT || id == Cave.BAT)
 				valid = false;
 			else
 				valid = true;

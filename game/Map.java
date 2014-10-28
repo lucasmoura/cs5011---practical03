@@ -255,7 +255,7 @@ public class Map
 		
 		Path currentRelativePath = Paths.get("");
 		filename = currentRelativePath.toAbsolutePath().toString()+filename;
-		System.out.println("Current relative path is: " + filename);
+		//System.out.println("Current relative path is: " + filename);
 		
 		try
 		{

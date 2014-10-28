@@ -34,6 +34,13 @@ public class KnowledgeBaseTest
 	@After
 	public void tearDown() throws Exception
 	{
+		Map.getInstance().getCave(11).setType(Cave.EMPTY);
+		Map.getInstance().getCave(6).setType(Cave.EMPTY);
+		Map.getInstance().getCave(3).setType(Cave.EMPTY);
+		
+		for(int i =0; i<21; i++)
+			knowledgeBase.univisitCave(i);
+		
 		map.clear();
 	}
 	
@@ -130,10 +137,10 @@ public class KnowledgeBaseTest
 		
 		ArrayList<Cave> visitedCaves = knowledgeBase.
 				createVisitedCaves(actualPosition);
-		ArrayList<Premisse> actualPremisse = knowledgeBase.generatePremisses(visitedCaves);
+		ArrayList<Premisse> actualPremisse = knowledgeBase.generatePremisses(visitedCaves, actualPosition);
 		
 		ArrayList<Premisse> expectedPremisses = new ArrayList<Premisse>();
-		Premisse premisse01 = new Premisse(6);
+		Premisse premisse01 = new Premisse(6, 1);
 		
 		premisse01.setProbability(Cave.PIT);
 		expectedPremisses.add(premisse01);
@@ -146,7 +153,7 @@ public class KnowledgeBaseTest
 		for(int i =0; i<3; i++)
 			assertEquals(actualPremisse01[i], expectedPremisse01[i]);
 		
-		Premisse premisse02 = new Premisse(11);
+		Premisse premisse02 = new Premisse(11, 1);
 		premisse02.setProbability(Cave.BAT);
 		int[] actualPremisse02 = actualPremisse.get(1).getProbability();
 		int[] expectedPremisse02 = {Cave.BAT, -1, -1};
@@ -156,7 +163,7 @@ public class KnowledgeBaseTest
 		for(int i =0; i<3; i++)
 			assertEquals(actualPremisse02[i], expectedPremisse02[i]);
 		
-		Premisse premisse03 = new Premisse(2);
+		Premisse premisse03 = new Premisse(2, 1);
 		premisse03.setProbability(Cave.EMPTY);
 		int[] actualPremisse03 = actualPremisse.get(2).getProbability();
 		int[] expectedPremisse03 = premisse03.getProbability();
@@ -198,10 +205,10 @@ public class KnowledgeBaseTest
 		
 		ArrayList<Cave> visitedCaves = knowledgeBase.
 				createVisitedCaves(actualPosition);
-		ArrayList<Premisse> actualPremisse = knowledgeBase.generatePremisses(visitedCaves);
+		ArrayList<Premisse> actualPremisse = knowledgeBase.generatePremisses(visitedCaves, actualPosition);
 		
 		ArrayList<Premisse> expectedPremisses = new ArrayList<Premisse>();
-		Premisse premisse01 = new Premisse(11);
+		Premisse premisse01 = new Premisse(11, 1);
 		
 		premisse01.setProbability(Cave.BAT);
 		expectedPremisses.add(premisse01);
@@ -214,7 +221,7 @@ public class KnowledgeBaseTest
 		for(int i =0; i<3; i++)
 			assertEquals(actualPremisse01[i], expectedPremisse01[i]);
 		
-		Premisse premisse02 = new Premisse(3);
+		Premisse premisse02 = new Premisse(3, 1);
 		premisse02.setProbability(Cave.PIT);
 		premisse02.setProbability(Cave.EMPTY);
 		int[] actualPremisse02 = actualPremisse.get(1).getProbability();
@@ -225,7 +232,7 @@ public class KnowledgeBaseTest
 		for(int i =0; i<3; i++)
 			assertEquals(actualPremisse02[i], expectedPremisse02[i]);
 		
-		Premisse premisse03 = new Premisse(2);
+		Premisse premisse03 = new Premisse(2, 1);
 		premisse03.setProbability(Cave.PIT);
 		premisse03.setProbability(Cave.EMPTY);
 		int[] actualPremisse03 = actualPremisse.get(2).getProbability();
@@ -298,25 +305,25 @@ public class KnowledgeBaseTest
 	{
 		ArrayList<Premisse> premisses = new ArrayList<Premisse>();
 		
-		Premisse premisse01 = new Premisse(1);
+		Premisse premisse01 = new Premisse(1, 1);
 		premisse01.setProbability(Cave.EMPTY);
 		
-		Premisse premisse02 = new Premisse(2);
+		Premisse premisse02 = new Premisse(2, 1);
 		premisse02.setProbability(Cave.PIT);
 		premisse02.setProbability(Cave.BAT);
 		
-		Premisse premisse03 = new Premisse(3);
+		Premisse premisse03 = new Premisse(3, 1);
 		premisse03.setProbability(Cave.PIT);
 		premisse03.setProbability(Cave.WUMPUS);
 		
-		Premisse premisse04 = new Premisse(4);
+		Premisse premisse04 = new Premisse(4, 1);
 		premisse04.setProbability(Cave.PIT);
 		premisse04.setProbability(Cave.EMPTY);
 		
-		Premisse premisse05 = new Premisse(5);
+		Premisse premisse05 = new Premisse(5, 1);
 		premisse05.setProbability(Cave.EMPTY);
 		
-		Premisse premisse06 = new Premisse(6);
+		Premisse premisse06 = new Premisse(6, 1);
 		premisse06.setProbability(Cave.PIT);
 		premisse06.setProbability(Cave.BAT);
 		premisse06.setProbability(Cave.WUMPUS);
@@ -334,6 +341,104 @@ public class KnowledgeBaseTest
 		
 		for(int i =0; i<premisses.size(); i++)
 			assertEquals(expectedPremisses[i], premisses.get(i));
+		
+	}
+	
+	@Test
+	public void askTest()
+	{
+		System.out.println("\naskTest\n");
+		
+		int actualPosition = 3;
+		int[] nodes = {3,11,1,4};
+		setVisitedNodes(nodes);
+		
+		knowledgeBase.setBreeze(actualPosition, true);
+		knowledgeBase.setEmpty(actualPosition, true);
+		knowledgeBase.setBat(actualPosition, false);
+		knowledgeBase.setPit(actualPosition, false);
+		knowledgeBase.setWumpus(actualPosition, false);
+		knowledgeBase.setSmell(actualPosition, false);
+		knowledgeBase.setSound(actualPosition, false);
+		
+		knowledgeBase.setBreeze(1, false);
+		knowledgeBase.setEmpty(1, true);
+		knowledgeBase.setSmell(1, false);
+		knowledgeBase.setSound(1, true);
+		
+		knowledgeBase.setBreeze(11, false);
+		knowledgeBase.setEmpty(11, false);
+		knowledgeBase.setSmell(11, false);
+		knowledgeBase.setSound(11, false);
+		knowledgeBase.setBat(11, true);
+		
+		knowledgeBase.setBreeze(4, false);
+		knowledgeBase.setEmpty(4, true);
+		knowledgeBase.setSmell(4, false);
+		knowledgeBase.setSound(4, false);
+		
+		knowledgeBase.setVisited(1);
+		knowledgeBase.setVisited(actualPosition);
+		knowledgeBase.setVisited(11);
+		knowledgeBase.setVisited(4);
+		
+		Map.getInstance().getCave(11).setType(Cave.BAT);
+		Map.getInstance().getCave(6).setType(Cave.PIT);
+		Map.getInstance().getCave(3).setType(Cave.EMPTY);
+		
+		Premisse premisse = knowledgeBase.ask(actualPosition);
+		
+		int expectedFather = 1;
+		int expectedLocation = 2;
+		
+		assertEquals(expectedLocation, premisse.getLocation());
+		assertEquals(expectedFather, premisse.getFather());
+		
+		
+	}
+	
+	@Test
+	public void findFatherTest()
+	{
+		int actualPosition = 3;
+		int[] nodes = {1, 3, 11, 20, 4};
+		
+		setVisitedNodes(nodes);
+		
+		int expectedValue = 1;
+		int location = 20;
+		int actualValue = knowledgeBase.findFather(actualPosition, location);
+		
+		assertEquals(expectedValue, actualValue);
+		
+		resetVisitedNodes(nodes);
+		
+		int[] nodes2 = {19, 18, 14, 9, 8, 4, 3, 7, 6};
+		actualPosition = 8;
+		location = 19;
+		
+		setVisitedNodes(nodes2);
+		
+		expectedValue = 9;
+		actualValue = knowledgeBase.findFather(actualPosition, location);
+		
+		assertEquals(expectedValue, actualValue);
+		
+		resetVisitedNodes(nodes2);
+		
+		int[] nodes3 = {3,11,1,4};
+		actualPosition = 3;
+		location = 2;
+		
+		setVisitedNodes(nodes3);
+		
+		expectedValue = 1;
+		actualValue = knowledgeBase.findFather(actualPosition, location);
+		
+		assertEquals(expectedValue, actualValue);
+		
+		resetVisitedNodes(nodes3);
+		
 		
 	}
 	
