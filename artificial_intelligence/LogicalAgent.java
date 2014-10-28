@@ -20,6 +20,7 @@ public class LogicalAgent implements Player
 	public static final int CONTINUE = 0;
 	public static final int VICTORY = 1;
 	
+	private int pastPosition;
 	private int position;
 	private int status;
 	private boolean breeze;
@@ -31,6 +32,7 @@ public class LogicalAgent implements Player
 	public LogicalAgent(int position)
 	{
 		this.position = position;
+		this.pastPosition = -1;
 		status = ALIVE;
 		breeze = smell = squish = false;
 		knowledgeBase = new KnowledgeBase();
@@ -83,14 +85,33 @@ public class LogicalAgent implements Player
 		else if(status == WON)
 			return VICTORY;
 		
-		Premisse premisse = knowledgeBase.ask(position);
+		ArrayList<Premisse> premisses = knowledgeBase.ask(position);
+		Premisse bestPremisse = null;
+		int size = premisses.size();
+		ArrayList<Integer> removeIndex = new ArrayList<Integer>();
+		
+		Random rand = new Random();
+		
+		for(int i =0; i<size; i++)
+		{
+			if(premisses.get(i).getFather() == pastPosition)
+				removeIndex.add(i);
+				
+		}
+		
+		for(Integer i : removeIndex)
+			premisses.remove(i);
+		
+		bestPremisse = premisses.get(rand.nextInt(premisses.size()));
+		
 		boolean validPosition = false;
 		
 		for(int i =0; i<adjacentCaves.size(); i++)
 		{
-			if(premisse.getFather() == adjacentCaves.get(i).getId())
+			if(bestPremisse.getFather() == adjacentCaves.get(i).getId())
 			{
-				position = premisse.getFather();
+				pastPosition = position;
+				position = bestPremisse.getFather();
 				validPosition = true;
 				break;
 			}	
@@ -98,7 +119,10 @@ public class LogicalAgent implements Player
 		}
 		
 		if(!validPosition)
-			position = premisse.getLocation();
+		{
+			pastPosition = position;
+			position = bestPremisse.getLocation();
+		}
 		
 		
 		breeze = smell = squish = false;

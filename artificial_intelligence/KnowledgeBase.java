@@ -3,6 +3,7 @@ package artificial_intelligence;
 import game.Cave;
 import game.Map;
 
+import java.awt.color.CMMException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,74 +16,111 @@ public class KnowledgeBase
 	
 	public class PremisseComparator implements Comparator<Premisse>
 	{
-	
+
+//		public int compareCaves(int[] probability01, int[] probability02, int index)
+//		{
+//			if(probability01[index]==Cave.EMPTY)
+//				return -1;
+//			else if(probability02[index] == Cave.EMPTY)
+//				return 1;
+//			else if(probability01[index]==Cave.WUMPUS)
+//				return -1;
+//			else if(probability02[index] == Cave.WUMPUS)
+//				return 1;
+//			else if(probability01[index]==Cave.PIT)
+//				return -1;
+//			else if(probability02[index] == Cave.PIT)
+//				return 1;
+//			else if(probability01[index]==Cave.BAT)
+//				return -1;
+//			else
+//				return 1;
+//		}
+		
 		@Override
 		public int compare(Premisse p1, Premisse p2)
 		{
 			int[] probability01 = p1.getProbability();
 			int[] probability02 = p2.getProbability();
 			
-			if(probability01[0] == probability02[0])
-			{
-				
-				if(probability01[1] == probability02[1])
-				{
-					if(probability01[2] == probability02[2])
-					{
-						if(p1.getLocation()>p2.getLocation())
-							return 1;
-						else if(p1.getLocation()<p2.getLocation())
-							return -1;
-						else
-							return 0;
-					}
-					else
-					{
-						if(probability01[2]==Cave.EMPTY)
-							return -1;
-						else if(probability02[2] == Cave.EMPTY)
-							return 1;
-						else if(probability01[2]==Cave.WUMPUS)
-							return 1;
-						else if(probability02[2] == Cave.WUMPUS)
-							return -1;
-						else if(probability01[2]==Cave.BAT)
-							return -1;
-						else
-							return 1;
-					}
-				}
-				else if(probability01[1]==Cave.EMPTY)
-					return -1;
-				else if(probability02[1] == Cave.EMPTY)
-					return 1;
-				else if(probability01[1]==Cave.WUMPUS)
-					return 1;
-				else if(probability02[1] == Cave.WUMPUS)
-					return -1;
-				else if(probability01[1]==Cave.BAT)
-					return -1;
-				else
-					return 1;
-				
-			}
+			if(probability01[0] == Cave.EMPTY && probability01[1] == -1)
+				return -1;
+			else if(probability02[0] == Cave.EMPTY && probability02[1] == -1)
+				return 1;
+			else if(probability01[0] == Cave.WUMPUS && probability01[1] == -1)
+				return -1;
+			else if(probability02[0] == Cave.WUMPUS && probability02[1] == -1)
+				return 1;
+			else if(probability01[0] == Cave.WUMPUS && probability01[1] == Cave.EMPTY)
+				return -1;
+			else if(probability02[0] == Cave.WUMPUS && probability02[1] == Cave.EMPTY)
+				return 1;
+			else if(probability01[0] == Cave.BAT && probability01[1] == Cave.EMPTY)
+				return -1;
+			else if(probability02[0] == Cave.BAT && probability02[1] == Cave.EMPTY)
+				return 1;
+			else if(probability01[0] == Cave.BAT && probability01[1] == Cave.WUMPUS)
+				return -1;
+			else if(probability02[0] == Cave.BAT && probability02[1] == Cave.WUMPUS)
+				return 1;
+			else if(probability01[0] == Cave.PIT && probability01[1] == Cave.WUMPUS)
+				return -1;
+			else if(probability02[0] == Cave.PIT && probability02[1] == Cave.WUMPUS)
+				return 1;
+			else if(probability01[0] == Cave.PIT && probability01[1] == Cave.BAT &&
+					probability01[2] == -1)
+				return -1;
+			else if(probability02[0] == Cave.PIT && probability02[1] == Cave.BAT &&
+					probability02[2] == -1)
+				return 1;
+			else if(probability01[0] == Cave.PIT && probability01[1] == Cave.EMPTY)
+				return -1;
+			else if(probability02[0] == Cave.PIT && probability02[1] == Cave.EMPTY)
+				return 1;
+			else if(probability01[0] == Cave.PIT && probability01[1] == Cave.BAT &&
+					probability01[2] == Cave.WUMPUS)
+				return -1;
+			else if(probability02[0] == Cave.PIT && probability02[1] == Cave.BAT &&
+					probability02[2] == Cave.WUMPUS)
+				return 1;
+			else if(probability01[0] == Cave.BAT && probability01[1] == -1)
+				return -1;
+			else if(probability02[0] == Cave.BAT && probability02[1] == -1)
+				return 1;
+			else if(probability01[0] == Cave.PIT && probability01[1] == -1)
+				return -1;
+			else if(probability02[0] == Cave.PIT && probability02[1] == -1)
+				return 1;
 			else
-			{
-				if(probability01[0]==Cave.EMPTY)
-					return -1;
-				else if(probability02[0] == Cave.EMPTY)
-					return 1;
-				else if(probability01[0]==Cave.WUMPUS)
-					return 1;
-				else if(probability02[0] == Cave.WUMPUS)
-					return -1;
-				else if(probability01[0]==Cave.BAT)
-					return -1;
-				else
-					return 1;
-			}
-				
-		}
+				return -1;
+			
+		}	
+//			
+//			if(probability01[0] == probability02[0])
+//			{
+//				
+//				if(probability01[1] == probability02[1])
+//				{
+//					if(probability01[2] == probability02[2])
+//					{
+//						if(p1.getLocation()>p2.getLocation())
+//							return 1;
+//						else if(p1.getLocation()<p2.getLocation())
+//							return -1;
+//						else
+//							return 0;
+//					}
+//					else
+//						return compareCaves(probability01, probability02, 2);
+//				}
+//				else 
+//					return compareCaves(probability01, probability02, 1);
+//				
+//			}
+//			else
+//				return compareCaves(probability01, probability02, 0);
+//				
+//		}
 	}	
 		
 	private CaveInfo[] caveInfo;
@@ -531,19 +569,36 @@ public class KnowledgeBase
 		return empty;
 	}
 
-	public Premisse ask(int actualPosition)
+	public ArrayList<Premisse> ask(int actualPosition)
 	{
 		ArrayList<Cave> visitedCaves = createVisitedCaves(actualPosition);
 		ArrayList<Premisse> premisses = generatePremisses(visitedCaves, actualPosition);
+		ArrayList<Premisse> bestPremisses = new ArrayList<Premisse>();
 		orderPremisses(premisses);
 		printPremisses(premisses);
 		
-		Premisse bestPremisse =  null;
+		for(int i =0; i<premisses.size()-1; i+=2)
+		{
+			int[] probability01 = premisses.get(i).getProbability();
+			int[] probability02 = premisses.get(i+1).getProbability();
+			
+			if(probability01[0] == probability02[0] && probability01[1] == probability02[1] &&
+					probability01[2] == probability02[2])
+			{
+				bestPremisses.add(premisses.get(i));
+				bestPremisses.add(premisses.get(i+1));
+			}	
+			
+		}
 		
-		if(premisses.isEmpty() == false)
-			bestPremisse = premisses.get(0);
+		if(bestPremisses.isEmpty())
+			bestPremisses.add(premisses.get(0));
+//		Premisse bestPremisse =  null;
+//		
+//		if(premisses.isEmpty() == false)
+//			bestPremisse = premisses.get(0);
 		
-		return bestPremisse;
+		return bestPremisses;
 	}
 	
 	private void printPremisses(ArrayList<Premisse> premisses)

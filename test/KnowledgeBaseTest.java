@@ -3,6 +3,7 @@ package test;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import game.Cave;
 import game.Map;
@@ -303,44 +304,77 @@ public class KnowledgeBaseTest
 	@Test
 	public void orderPremissesTest()
 	{
+		
+		System.out.println("\norderPremissesTest\n");
+		
 		ArrayList<Premisse> premisses = new ArrayList<Premisse>();
 		
 		Premisse premisse01 = new Premisse(1, 1);
 		premisse01.setProbability(Cave.EMPTY);
 		
 		Premisse premisse02 = new Premisse(2, 1);
-		premisse02.setProbability(Cave.PIT);
-		premisse02.setProbability(Cave.BAT);
+		premisse02.setProbability(Cave.WUMPUS);
 		
 		Premisse premisse03 = new Premisse(3, 1);
-		premisse03.setProbability(Cave.PIT);
 		premisse03.setProbability(Cave.WUMPUS);
+		premisse03.setProbability(Cave.EMPTY);
 		
 		Premisse premisse04 = new Premisse(4, 1);
-		premisse04.setProbability(Cave.PIT);
+		premisse04.setProbability(Cave.BAT);
 		premisse04.setProbability(Cave.EMPTY);
 		
 		Premisse premisse05 = new Premisse(5, 1);
-		premisse05.setProbability(Cave.EMPTY);
+		premisse05.setProbability(Cave.BAT);
+		premisse05.setProbability(Cave.WUMPUS);
 		
 		Premisse premisse06 = new Premisse(6, 1);
 		premisse06.setProbability(Cave.PIT);
-		premisse06.setProbability(Cave.BAT);
 		premisse06.setProbability(Cave.WUMPUS);
 		
+		Premisse premisse07 = new Premisse(7, 1);
+		premisse07.setProbability(Cave.PIT);
+		premisse07.setProbability(Cave.BAT);
+		
+		Premisse premisse08 = new Premisse(8, 1);
+		premisse08.setProbability(Cave.PIT);
+		premisse08.setProbability(Cave.EMPTY);
+		
+		Premisse premisse09 = new Premisse(9, 1);
+		premisse09.setProbability(Cave.PIT);
+		premisse09.setProbability(Cave.BAT);
+		premisse09.setProbability(Cave.WUMPUS);
+		
+		//System.out.println(Arrays.toString(premisse09.getProbability()));
+		
+		Premisse premisse10 = new Premisse(10, 1);
+		premisse10.setProbability(Cave.BAT);
+		
+		Premisse premisse11 = new Premisse(11, 1);
+		premisse11.setProbability(Cave.PIT);
+		
 		premisses.add(premisse05);
+		premisses.add(premisse10);
 		premisses.add(premisse03);
+		premisses.add(premisse07);
+		premisses.add(premisse11);
 		premisses.add(premisse01);
+		premisses.add(premisse06);
 		premisses.add(premisse04);
 		premisses.add(premisse02);
+		premisses.add(premisse08);
+		premisses.add(premisse09);
 		
-		Premisse[] expectedPremisses = {premisse01, premisse05, premisse04, premisse02, premisse03, premisse06};
+		Premisse[] expectedPremisses = {premisse01, premisse02, premisse03, premisse04, premisse05, premisse06,
+				premisse07, premisse08, premisse09, premisse10, premisse11};
 		
 		
 		knowledgeBase.orderPremisses(premisses);
 		
 		for(int i =0; i<premisses.size(); i++)
+		{
+			System.out.println("Order: "+i);
 			assertEquals(expectedPremisses[i], premisses.get(i));
+		}	
 		
 	}
 	
@@ -386,7 +420,8 @@ public class KnowledgeBaseTest
 		Map.getInstance().getCave(6).setType(Cave.PIT);
 		Map.getInstance().getCave(3).setType(Cave.EMPTY);
 		
-		Premisse premisse = knowledgeBase.ask(actualPosition);
+		ArrayList<Premisse> premisses = knowledgeBase.ask(actualPosition);
+		Premisse premisse = premisses.get(0);
 		
 		int expectedFather = 1;
 		int expectedLocation = 2;

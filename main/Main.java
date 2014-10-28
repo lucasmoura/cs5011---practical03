@@ -8,6 +8,17 @@ import game.Player;
 public class Main 
 {
 	
+	private static void pressAnyKeyToContinue()
+	 { 
+	        System.out.println("Press any key to continue...");
+	        try
+	        {
+	            System.in.read();
+	        }  
+	        catch(Exception e)
+	        {}  
+	 }
+	
 	public static void main(String[] args)
 	{
 		Map.getInstance().initMapWithFile();
@@ -20,7 +31,12 @@ public class Main
 		System.out.println("Player starting position: "+((LogicalAgent) player).getPosition());
 		
 		while(status == LogicalAgent.CONTINUE)
+		{
 			status = player.move();
+			//pressAnyKeyToContinue();
+		}	
+		
+		
 		
 		System.out.println("Game finished with player status: "+((LogicalAgent) player).getStatus());
 		
