@@ -7,6 +7,7 @@ public class Premisse
 	private int[] probability;
 	private int location;
 	private int father;
+	private int generator;
 	
 	public Premisse(int location, int father)
 	{
@@ -57,5 +58,15 @@ public class Premisse
 	public void setFather(int father) {
 		this.father = father;
 	}
+
+	public int getGenerator() {
+		return generator;
+	}
+
+	public void setGenerator(int generator) {
+		this.generator = generator;
+	}
+	
+	
 	
 }

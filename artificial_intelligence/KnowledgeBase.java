@@ -9,6 +9,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Stack;
 
 public class KnowledgeBase
@@ -177,66 +179,131 @@ public class KnowledgeBase
 		
 	}
 	
-	public int findFather(int actualPosition, int location)
+	public int[] bfs(int actualPosition, int location, int father)
 	{
-		ArrayList<Cave> adjacentCaves = Map.getInstance().getChamberEdges(actualPosition);
-		Stack<Cave> cave = new Stack<Cave>();
-		int father;
-		boolean found = false;
+		int find, size;
+		
+		find = size = 0;
+		
+		if(caveInfo[actualPosition].hasBat() ||
+		   caveInfo[actualPosition].hasPit() ||
+		   caveInfo[actualPosition].hasWumpus())
+		{
+			int[] answer = {-1, size};
+			return answer;
+		}
+		
+		Queue<Integer> caves = new LinkedList<Integer>();
+		HashMap<Integer, Integer> parentMap = new HashMap<Integer, Integer>();
+		
+		caves.add(actualPosition);
+		parentMap.put(actualPosition, father);
 		
 		int[] storedCaves = new int[21];
 		Arrays.fill(storedCaves, 0);
 		
-		for(int i =0; i<adjacentCaves.size(); i++)
+		//System.out.println("Actual Position: "+actualPosition + ", Location: "+location);
+	
+		while(!caves.isEmpty())
 		{
-			if(adjacentCaves.get(i).getId() == location)
-				return actualPosition;
+			Integer caveId = caves.poll();
+			storedCaves[caveId] = 1;
+			
+			//System.out.println("Cave visited = "+caveId);
+			
+			if(caveId == location)
+			{
+				//System.out.println("Cave found!! for id: "+caveId);
+				find = 1;
+				break;
+			}	
+			
+			ArrayList<Cave> adjacentCaves = Map.getInstance().getChamberEdges(caveId);
+			
+			for(int i =0; i<adjacentCaves.size(); i++)
+			{
+				int id = adjacentCaves.get(i).getId();
+				//System.out.println("Cave "+id+" is visited? "+caveInfo[id].isVisited());
+		
+				if(caveInfo[id].hasBat() ||
+				   caveInfo[id].hasPit() ||	
+				   caveInfo[id].hasWumpus() ||
+				   (caveInfo[id].isVisited() == false && id != location)||
+				   id == father || 
+				   storedCaves[id] == 1)
+				{
+					
+					continue;
+				}
+				else
+				{
+					caves.add(id);
+					parentMap.put(id, caveId);
+				}	
+			}
+		}
+	
+		
+		if(find == 1)
+		{
+			Integer target = location;
+			
+			while (target != null)
+			{
+			  //System.out.println(target);
+			  size++;
+			  target = parentMap.get(target);
+			  
+			}			  
 		}
 		
-		for(int i =0; i<adjacentCaves.size(); i++)
+		//System.out.println("Path size: "+size);
+		int[] value = {find, size};
+		
+		return value;
+	}
+	
+	public int findFather(int actualPosition, int location, int premisseGenerator)
+	{
+		
+		int size;
+		size = 100;
+		int father = -1;
+		boolean valid = false;
+		
+		ArrayList<Cave> adjacentCave = Map.getInstance().getAdjacentCaves(actualPosition);
+		int []answer = new int[2];
+		
+		if(premisseGenerator == actualPosition)
+			valid = true;
+		
+		for(int i =0; i<adjacentCave.size(); i++)
 		{
-			Cave c = adjacentCaves.get(i);
-			father = c.getId();
-			storedCaves[c.getId()] = 1;
-			cave.add(c);
+			int id = adjacentCave.get(i).getId();
+			//System.out.println("Cave id: "+id);
 			
-			while(cave.isEmpty() == false)
+			if(caveInfo[id].isVisited() == true || valid)
+				answer = bfs(id, location, actualPosition);
+			
+//			System.out.println("For location: " + location +
+//					" caveId: "+id+"\nAswer (found: "+answer[0]+", size: "+answer[1]+")\n");
+			
+			if(answer[0] ==1)
 			{
-				c = cave.peek();
-				cave.pop();
-				
-				if(c.getId() == location)
+				if(answer[1]<size)
 				{
-				 found = true;
-				 break;
-				}
-				
-				ArrayList<Cave> adjacent = Map.getInstance().getChamberEdges(c.getId());
-				
-				for(Cave ca: adjacent)
-				{
-					if(ca.getId() == location)
-					{
-						found = true;
-						break;
-					}
-					else if(ca.getId() == actualPosition)
-						continue;
-					else if(caveInfo[ca.getId()].isVisited()
-							&& storedCaves[ca.getId()] == 0)
-					{
-						cave.add(ca);
-						storedCaves[ca.getId()] = 1;
-					}
+					size = answer[1];
+					father = id;
 				}
 			}
-			
-			if(found)
-				return father;
 		}
+	
+		if(father == location)
+			father = actualPosition;
 		
-		return -1;
+		return father;
 	}
+
 	
 	public ArrayList<Premisse> generatePremisses(ArrayList<Cave> visitedCaves, int actualPosition)
 	{
@@ -246,6 +313,7 @@ public class KnowledgeBase
 		{
 			
 			int id = visitedCaves.get(i).getId();
+			//System.out.println("Cave creating premisse: "+id);
 			ArrayList<Cave> adjacentCaves = Map.getInstance().getChamberEdges(id);
 			CaveInfo cave = caveInfo[id];
 			
@@ -280,7 +348,8 @@ public class KnowledgeBase
 						case Cave.BAT:
 							sound = false;
 							//System.out.println("Add premisse with location: "+adjacentId);
-							premisse = new Premisse(adjacentId, findFather(actualPosition, adjacentId));
+							premisse = new Premisse(adjacentId, id);
+							premisse.setGenerator(id);
 							premisse.setProbability(Cave.BAT);
 							premisses.add(premisse);
 							break;
@@ -288,7 +357,8 @@ public class KnowledgeBase
 						case Cave.PIT:
 							breeze = false;
 							//System.out.println("Add premisse with location: "+adjacentId);
-						    premisse = new Premisse(adjacentId, findFather(actualPosition, adjacentId));
+						    premisse = new Premisse(adjacentId, id);
+						    premisse.setGenerator(id);
 						    premisse.setProbability(Cave.PIT);
 						    premisses.add(premisse);
 							break;
@@ -296,7 +366,8 @@ public class KnowledgeBase
 						case Cave.WUMPUS:
 							smell = false;
 							//System.out.println("Add premisse with location: "+adjacentId);
-							premisse = new Premisse(adjacentId, findFather(actualPosition, adjacentId));
+							premisse = new Premisse(adjacentId, id);
+							premisse.setGenerator(id);
 							premisse.setProbability(Cave.WUMPUS);
 							premisses.add(premisse);
 							break;
@@ -307,7 +378,8 @@ public class KnowledgeBase
 				}
 				
 				//System.out.println("Adjacent cave: "+adjacentId);
-				Premisse premisse = new Premisse(adjacentId, findFather(actualPosition, adjacentId));
+				Premisse premisse = new Premisse(adjacentId, findFather(actualPosition, adjacentId, id));
+				premisse.setGenerator(id);
 				int unknown = 3;
 				
 				for(int k = 0; k<adjacentCaves.size(); k++)
@@ -350,7 +422,7 @@ public class KnowledgeBase
 					
 				}	
 				
-				//System.out.println(makeInference(id, adjacentId, unknown, sensations));
+				makeInference(id, adjacentId, unknown, sensations);
 				
 				//System.out.println("Stop looking into adjacent nodes");
 			
@@ -410,8 +482,21 @@ public class KnowledgeBase
 		boolean sound = caveInfo[father].feelSound();
 		boolean smell = caveInfo[father].feelSmell();
 		
-//		System.out.println("Father: "+father);
-//		System.out.println("Inference: "+adjacentId);
+		if(father ==18)
+		{
+			System.out.println("Father: "+father);
+			System.out.println("Inference: "+adjacentId);
+			
+			System.out.println("Breeze: "+breeze);
+			System.out.println("Sound: "+sound);
+			System.out.println("Smell: "+smell);
+			
+			System.out.println("Unknown: "+unknown);
+			System.out.println("Sensation[PIT] "+sensations[0]);
+			System.out.println("Sensation[WUMPUS] "+sensations[1]);
+			System.out.println("Sensation[BAT] "+sensations[2]);
+			
+		}
 //		
 		if(breeze && sound && !smell && sensations[0] == 1 && sensations[2] == 1 && unknown == 1)
 		{
@@ -419,7 +504,7 @@ public class KnowledgeBase
 			caveInfo[adjacentId].setBat(false);
 			caveInfo[adjacentId].setWumpus(false);
 			caveInfo[adjacentId].setEmpty(true);
-			caveInfo[adjacentId].setVisited(true);
+			//caveInfo[adjacentId].setVisited(true);
 			return true;
 		}
 		else if(breeze && sound && !smell && sensations[0] == 0 && sensations[2] == 1 && unknown == 0)
@@ -446,7 +531,7 @@ public class KnowledgeBase
 			caveInfo[adjacentId].setBat(false);
 			caveInfo[adjacentId].setWumpus(false);
 			caveInfo[adjacentId].setEmpty(true);
-			caveInfo[adjacentId].setVisited(true);
+			//caveInfo[adjacentId].setVisited(true);
 			return true;
 		}
 		else if(breeze && !sound && smell && sensations[0] == 0 && sensations[1] == 1 && unknown == 0)
@@ -458,8 +543,9 @@ public class KnowledgeBase
 			caveInfo[adjacentId].setVisited(true);
 			return true;
 		}
-		else if(breeze && !sound && smell && sensations[0] == 1 && sensations[1] == 0 && unknown == 0)
+		else if(breeze && !sound && smell && sensations[0] == 1 && sensations[1] == 0 && unknown == 1)
 		{
+			System.out.println("WUMPUS found: "+adjacentId);
 			caveInfo[adjacentId].setPit(false);
 			caveInfo[adjacentId].setBat(false);
 			caveInfo[adjacentId].setWumpus(true);
@@ -473,7 +559,7 @@ public class KnowledgeBase
 			caveInfo[adjacentId].setBat(false);
 			caveInfo[adjacentId].setWumpus(false);
 			caveInfo[adjacentId].setEmpty(true);
-			caveInfo[adjacentId].setVisited(true);
+			//caveInfo[adjacentId].setVisited(true);
 			return true;
 		}
 		else if(!breeze && sound && smell && sensations[2] == 0 && sensations[1] == 1 && unknown == 0)
@@ -487,6 +573,7 @@ public class KnowledgeBase
 		}
 		else if(!breeze && sound && smell && sensations[2] == 1 && sensations[1] == 0 && unknown == 0)
 		{
+			System.out.println("WUMPUS found: "+adjacentId);
 			caveInfo[adjacentId].setPit(false);
 			caveInfo[adjacentId].setBat(false);
 			caveInfo[adjacentId].setWumpus(true);
@@ -500,7 +587,7 @@ public class KnowledgeBase
 			caveInfo[adjacentId].setBat(false);
 			caveInfo[adjacentId].setWumpus(false);
 			caveInfo[adjacentId].setEmpty(true);
-			caveInfo[adjacentId].setVisited(true);
+			//caveInfo[adjacentId].setVisited(true);
 			return true;
 		}
 		else if(breeze && sensations[0]==0 && unknown ==1)
@@ -518,11 +605,12 @@ public class KnowledgeBase
 			caveInfo[adjacentId].setBat(false);
 			caveInfo[adjacentId].setWumpus(false);
 			caveInfo[adjacentId].setEmpty(true);
-			caveInfo[adjacentId].setVisited(true);
+			//caveInfo[adjacentId].setVisited(true);
 			return true;
 		}
 		else if(smell && sensations[1]==0 && unknown ==1)
 		{
+			System.out.println("WUMPUS found: "+adjacentId);
 			caveInfo[adjacentId].setPit(false);
 			caveInfo[adjacentId].setBat(false);
 			caveInfo[adjacentId].setWumpus(true);
@@ -536,7 +624,7 @@ public class KnowledgeBase
 			caveInfo[adjacentId].setBat(false);
 			caveInfo[adjacentId].setWumpus(false);
 			caveInfo[adjacentId].setEmpty(true);
-			caveInfo[adjacentId].setVisited(true);
+			//caveInfo[adjacentId].setVisited(true);
 			return true;
 		}
 		else if(sound && sensations[2]==0 && unknown ==1)
@@ -572,32 +660,50 @@ public class KnowledgeBase
 	public ArrayList<Premisse> ask(int actualPosition)
 	{
 		ArrayList<Cave> visitedCaves = createVisitedCaves(actualPosition);
+		
+//		for(Cave c : visitedCaves)
+//			System.out.println("Visited cave: "+c.getId());
+		
+		System.out.println();
+		
 		ArrayList<Premisse> premisses = generatePremisses(visitedCaves, actualPosition);
 		ArrayList<Premisse> bestPremisses = new ArrayList<Premisse>();
 		orderPremisses(premisses);
 		printPremisses(premisses);
 		
-		for(int i =0; i<premisses.size()-1; i+=2)
+		Premisse [] removePremisses = new Premisse[premisses.size()];
+		int index = 0;
+		
+		for(Premisse p : premisses)
 		{
-			int[] probability01 = premisses.get(i).getProbability();
-			int[] probability02 = premisses.get(i+1).getProbability();
+			if(p.getFather() == -1)
+				removePremisses[index++] = p;
+		}
+		
+		for(int i =0; i<removePremisses.length; i++)
+			premisses.remove(removePremisses[i]);
+		
+		bestPremisses.add(premisses.get(0));
+		
+		for(int i =1; i<premisses.size(); i++)
+		{
+			int[] probability01 = premisses.get(i-1).getProbability();
+			int[] probability02 = premisses.get(i).getProbability();
 			
 			if(probability01[0] == probability02[0] && probability01[1] == probability02[1] &&
 					probability01[2] == probability02[2])
 			{
 				bestPremisses.add(premisses.get(i));
-				bestPremisses.add(premisses.get(i+1));
 			}	
-			
+			else
+				break;
 		}
 		
-		if(bestPremisses.isEmpty())
-			bestPremisses.add(premisses.get(0));
 //		Premisse bestPremisse =  null;
 //		
 //		if(premisses.isEmpty() == false)
 //			bestPremisse = premisses.get(0);
-		
+		System.out.println("Best premisses size: "+bestPremisses.size());
 		return bestPremisses;
 	}
 	
@@ -609,6 +715,7 @@ public class KnowledgeBase
 		for(int i =0; i<premisses.size(); i++)
 		{
 			System.out.println("Premisse: "+i);
+			System.out.println("Generator: "+premisses.get(i).getGenerator());
 			System.out.println("Father: "+premisses.get(i).getFather());
 			System.out.println("Location: "+premisses.get(i).getLocation());
 			System.out.println("Probability: "+Arrays.toString(premisses.get(i).getProbability()));

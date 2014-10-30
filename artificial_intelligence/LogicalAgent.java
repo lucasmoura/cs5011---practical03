@@ -1,6 +1,7 @@
 package artificial_intelligence;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -59,19 +60,22 @@ public class LogicalAgent implements Player
 	{
 		
 		ArrayList<Cave> adjacentCaves = Map.getInstance().getAdjacentCaves(position);
+		int[] caves = new int[3];
 		
 		for(int i =0; i<adjacentCaves.size(); i++)
 		{
-			
+			caves[i] = adjacentCaves.get(i).getId();
 			if(adjacentCaves.get(i).hasBat())
 				squish = true;
 			else if(adjacentCaves.get(i).hasPit())
 				breeze = true;
 			else if(adjacentCaves.get(i).hasWumpus())
 				smell = true;
+			
 		}
 		
 		checkPositionStatus();
+		breeze = smell = squish = false;
 		
 		if(status == DEAD)
 			return GAMEOVER;
@@ -86,32 +90,74 @@ public class LogicalAgent implements Player
 			return VICTORY;
 		
 		ArrayList<Premisse> premisses = knowledgeBase.ask(position);
+		ArrayList<Premisse> advancePremisses = new ArrayList<Premisse>();
 		Premisse bestPremisse = null;
-		int size = premisses.size();
-		ArrayList<Integer> removeIndex = new ArrayList<Integer>();
 		
-		Random rand = new Random();
+		if(premisses.size() == 1)
+			bestPremisse = premisses.get(0);
 		
-		for(int i =0; i<size; i++)
+		
+		else if(premisses.get(0).getProbability()[0] == Cave.EMPTY)
 		{
-			if(premisses.get(i).getFather() == pastPosition)
-				removeIndex.add(i);
-				
+			for(int i =0; i<premisses.size(); i++)
+			{
+				if(premisses.get(i).getFather() == pastPosition)
+					continue;
+				else
+				{
+					bestPremisse = premisses.get(i);
+					break;
+				}
+			}
+		}
+		else
+		{
+			System.out.println("Entrou aqui "+premisses.size());
+			System.out.println("Cave 0: "+caves[0]);
+			System.out.println("Cave 1: "+caves[1]);
+			System.out.println("Cave 2: "+caves[2]);
+			
+			for(int i =0; i<premisses.size(); i++)
+			{
+				if(premisses.get(i).getLocation() == caves[0] || 
+				   premisses.get(i).getLocation() == caves[1] ||
+				   premisses.get(i).getLocation() == caves[2])
+				{
+					advancePremisses.add(premisses.get(i));
+				}
+			}
+			
+			System.out.println("Advance size: "+advancePremisses.size());
+			Random rand = new Random();
+			
+			if(advancePremisses.size() > 0)
+				bestPremisse = advancePremisses.get(rand.nextInt(advancePremisses.size()));
 		}
 		
-		for(Integer i : removeIndex)
-			premisses.remove(i);
+		if(bestPremisse==null)
+		{
+			Random rand = new Random();
+			bestPremisse = premisses.get(rand.nextInt(premisses.size()));
+		}
 		
-		bestPremisse = premisses.get(rand.nextInt(premisses.size()));
+		int value = checkForWumpus(bestPremisse);
+		
+		if(value == -1)
+		{
+			status = DEAD;
+			return GAMEOVER;
+		}
+		else if(value == 0 || value == -2)
+			return CONTINUE;
 		
 		boolean validPosition = false;
 		
 		for(int i =0; i<adjacentCaves.size(); i++)
 		{
-			if(bestPremisse.getFather() == adjacentCaves.get(i).getId())
+			if(bestPremisse.getLocation() == adjacentCaves.get(i).getId())
 			{
 				pastPosition = position;
-				position = bestPremisse.getFather();
+				position = bestPremisse.getLocation();
 				validPosition = true;
 				break;
 			}	
@@ -121,11 +167,9 @@ public class LogicalAgent implements Player
 		if(!validPosition)
 		{
 			pastPosition = position;
-			position = bestPremisse.getLocation();
+			position = bestPremisse.getFather();
 		}
 		
-		
-		breeze = smell = squish = false;
 		System.out.println("Player has moved to the following position: "+position);
 		
 		return CONTINUE;
@@ -222,7 +266,7 @@ public class LogicalAgent implements Player
 			position = rand.nextInt(20)+1;
 			int id =Map.getInstance().getCave(position).getType();
 			
-			if( id== Cave.PIT || id == Cave.PIT || id == Cave.BAT)
+			if( id== Cave.PIT || id == Cave.WUMPUS || id == Cave.BAT)
 				valid = false;
 			else
 				valid = true;
@@ -233,31 +277,64 @@ public class LogicalAgent implements Player
 	}
 
 	@Override
-	public boolean shootArrow(Cave cave) 
+	public int shootArrow(int caveId) 
 	{
+		Cave cave = Map.getInstance().getCave(caveId);
+		
 		if(cave.getType() == Cave.WUMPUS)
 		{
-			System.out.println("Player has succesfully killed the Wumpus");
-			return true;
+			System.out.println("Player has killed the wumpus");
+			knowledgeBase.setVisited(cave.getId());
+			knowledgeBase.setEmpty(cave.getId(), true);
+			knowledgeBase.setBat(cave.getId(), false);
+			knowledgeBase.setPit(cave.getId(), false);
+			knowledgeBase.setWumpus(cave.getId(), false);
+			knowledgeBase.setSmell(position, false);
+			cave.setType(Cave.EMPTY);
+			return 0;
 		}	
 		else
 		{
-			moveWumpus(cave);
-			return false;
+			if(moveWumpus(cave) == position)
+				return -1;
+			
 		}	
-	}
-	
-	public int attackWumpus(int movement, Cave cave)
-	{
-		boolean kill = shootArrow(cave);
 		
-		if(kill == false)
-			return position;
-		else
-			return cave.getId();
+		return -2;
 	}
 	
-	public void moveWumpus(Cave cave)
+	public int checkForWumpus(Premisse premisse)
+	{
+		if(premisse==null)
+			return -3;
+		
+		int[] probability = premisse.getProbability();
+		
+		if(probability[0] == Cave.WUMPUS )
+		{
+			return shootArrow(premisse.getLocation());
+		}
+		else if(probability[0] == Cave.PIT && probability[1] == Cave.WUMPUS)
+		{
+			int value = shootArrow(premisse.getLocation());
+			
+			if(value == -2)
+			{
+				knowledgeBase.setVisited(premisse.getLocation());
+				knowledgeBase.setEmpty(premisse.getLocation(), false);
+				knowledgeBase.setBat(premisse.getLocation(), false);
+				knowledgeBase.setPit(premisse.getLocation(), true);
+				knowledgeBase.setWumpus(premisse.getLocation(), false);
+				return -2;
+			}
+			else
+				return value;
+		}
+		
+		return -4;
+	}
+	
+	public int moveWumpus(Cave cave)
 	{
 		Random rand = new Random();
 		int move = rand.nextInt(3);
@@ -266,6 +343,8 @@ public class LogicalAgent implements Player
 		movements.get(move).setType(Cave.WUMPUS);
 		
 		cave.setType(Cave.EMPTY);
+				
+		return movements.get(move).getId();
 	}
 
 //	if(availableMovements.size() == 3)

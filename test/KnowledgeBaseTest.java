@@ -435,14 +435,18 @@ public class KnowledgeBaseTest
 	@Test
 	public void findFatherTest()
 	{
+		System.out.println("\nfindFatherTest\n");
+		
 		int actualPosition = 3;
-		int[] nodes = {1, 3, 11, 20, 4};
+		int[] nodes = {1, 3,4,11,12,17,13,14,9};
+		
+		System.out.println("\nfindFatherTest01\n");
 		
 		setVisitedNodes(nodes);
 		
-		int expectedValue = 1;
-		int location = 20;
-		int actualValue = knowledgeBase.findFather(actualPosition, location);
+		int expectedValue = 4;
+		int location = 8;
+		int actualValue = knowledgeBase.findFather(actualPosition, location, 1);
 		
 		assertEquals(expectedValue, actualValue);
 		
@@ -452,10 +456,12 @@ public class KnowledgeBaseTest
 		actualPosition = 8;
 		location = 19;
 		
+		System.out.println("\nfindFatherTest02\n");
+		
 		setVisitedNodes(nodes2);
 		
 		expectedValue = 9;
-		actualValue = knowledgeBase.findFather(actualPosition, location);
+		actualValue = knowledgeBase.findFather(actualPosition, location, 1);
 		
 		assertEquals(expectedValue, actualValue);
 		
@@ -468,11 +474,29 @@ public class KnowledgeBaseTest
 		setVisitedNodes(nodes3);
 		
 		expectedValue = 1;
-		actualValue = knowledgeBase.findFather(actualPosition, location);
+		actualValue = knowledgeBase.findFather(actualPosition, location, 1);
 		
 		assertEquals(expectedValue, actualValue);
 		
 		resetVisitedNodes(nodes3);
+		
+		
+		actualPosition = 3;
+		location = 8;
+		
+		knowledgeBase.setPit(4, true);
+
+		
+		setVisitedNodes(nodes);
+		
+		expectedValue = 1;
+		actualValue = knowledgeBase.findFather(actualPosition, location, 1);
+		
+		assertEquals(expectedValue, actualValue);
+		
+		resetVisitedNodes(nodes);
+		
+		knowledgeBase.setPit(4, false);
 		
 		
 	}
