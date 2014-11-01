@@ -15,7 +15,8 @@ public class LogicalAgent implements Player
 	private final int ALIVE = 0;
 	private final int DEAD = 1;
 	private final int BAT = 2;
-	private final int WON = 3;
+	private final int TREASURE = 3;
+	private final int WON = 4;
 	
 	public static final int GAMEOVER = -1;
 	public static final int CONTINUE = 0;
@@ -29,13 +30,14 @@ public class LogicalAgent implements Player
 	private boolean squish;
 	
 	private KnowledgeBase knowledgeBase;
+	private boolean searchExit;
 	
 	public LogicalAgent(int position)
 	{
 		this.position = position;
 		this.pastPosition = -1;
 		status = ALIVE;
-		breeze = smell = squish = false;
+		searchExit = breeze = smell = squish = false;
 		knowledgeBase = new KnowledgeBase();
 	}
 
@@ -79,15 +81,42 @@ public class LogicalAgent implements Player
 		
 		if(status == DEAD)
 			return GAMEOVER;
+		else if(status == WON)
+		{
+			return VICTORY;
+		}
 		else if(status == BAT)
 		{
-			System.out.println("Player has encountered a Bat!!");
+			System.out.println("\nPlayer has encountered a Bat!!!\n");
 			position = generateNewPosition();
 			System.out.println("Player new position is: "+position);
 			return CONTINUE;
 		}
-		else if(status == WON)
-			return VICTORY;
+		else if(status == TREASURE && !searchExit)
+		{
+			System.out.println("Player has collected the Treasure!!!");
+			searchExit = true;
+			status = ALIVE;
+			return CONTINUE;
+		}
+		
+		if(searchExit && knowledgeBase.getExitCave() != -1)
+		{
+			System.out.println("Player is moving to the exit..");
+			position = knowledgeBase.goToExit(position);
+			
+			if(position == knowledgeBase.getExitCave())
+			{
+				status = WON;
+				System.out.println("Player has reached the exit!");
+				return VICTORY;
+			}
+			else
+			{
+				status = ALIVE;
+				return CONTINUE;
+			}
+		}
 		
 		ArrayList<Premisse> premisses = knowledgeBase.ask(position);
 		ArrayList<Premisse> advancePremisses = new ArrayList<Premisse>();
@@ -101,7 +130,7 @@ public class LogicalAgent implements Player
 		{
 			for(int i =0; i<premisses.size(); i++)
 			{
-				if(premisses.get(i).getFather() == pastPosition)
+				if(premisses.get(i).getFather() == pastPosition || premisses.get(i).getLocation() == pastPosition)
 					continue;
 				else
 				{
@@ -112,10 +141,6 @@ public class LogicalAgent implements Player
 		}
 		else
 		{
-			System.out.println("Entrou aqui "+premisses.size());
-			System.out.println("Cave 0: "+caves[0]);
-			System.out.println("Cave 1: "+caves[1]);
-			System.out.println("Cave 2: "+caves[2]);
 			
 			for(int i =0; i<premisses.size(); i++)
 			{
@@ -174,43 +199,6 @@ public class LogicalAgent implements Player
 		
 		return CONTINUE;
 		
-//		ArrayList<Cave> visited = new ArrayList<Cave>();
-//		
-//		for(int i =0; i<adjacentCaves.size(); i++)
-//		{
-//			int caveIndex = adjacentCaves.get(i).getId();
-//			
-//			if(adjacentCaves.get(i).hasBat())
-//				squish = true;
-//			else if(adjacentCaves.get(i).hasPit())
-//				breeze = true;
-//			else if(adjacentCaves.get(i).hasWumpus())
-//				smell = true;
-//			
-//			if(knowledgeBase.isVisited(caveIndex) == true)
-//				visited.add(Map.getInstance().getCave(caveIndex));
-//		}
-//		
-//		checkPositionStatus();
-//		
-//		if(status == DEAD)
-//			return GAMEOVER;
-//		else if(status == BAT)
-//		{
-//			System.out.println("Player has encountered a Bat!!");
-//			position = generateNewPosition();
-//			System.out.println("Player new position is: "+position);
-//			return CONTINUE;
-//		}
-//		else if(status == WON)
-//			return VICTORY;
-//		
-//		position = createBestMove(adjacentCaves, visited);
-//		
-//		System.out.println("Player has moved to the following position: "+position);
-//		breeze = smell = squish = false;
-//		
-//		return CONTINUE;
 	}
 
 	private void checkPositionStatus()
@@ -229,6 +217,12 @@ public class LogicalAgent implements Player
 				knowledgeBase.setBreeze(cave.getId(), breeze);
 				knowledgeBase.setSmell(cave.getId(), smell);
 				knowledgeBase.setSound(cave.getId(), squish);
+				
+				if(cave.isExit() && knowledgeBase.getTreasure() == true)
+					status = WON;
+				else if(cave.isExit())
+					knowledgeBase.setExit(cave.getId());
+				
 				break;
 		
 			case Cave.PIT:
@@ -237,7 +231,16 @@ public class LogicalAgent implements Player
 				break;
 			
 			case Cave.TREASURE:
-				status = WON;
+				knowledgeBase.setTreasure(true);
+				knowledgeBase.setVisited(cave.getId());
+				knowledgeBase.setEmpty(cave.getId(), true);
+				knowledgeBase.setBat(cave.getId(), false);
+				knowledgeBase.setPit(cave.getId(), false);
+				knowledgeBase.setWumpus(cave.getId(), false);
+				knowledgeBase.setBreeze(cave.getId(), breeze);
+				knowledgeBase.setSmell(cave.getId(), smell);
+				knowledgeBase.setSound(cave.getId(), squish);
+				status = TREASURE;
 				break;
 			
 			case Cave.BAT:
@@ -279,7 +282,10 @@ public class LogicalAgent implements Player
 	@Override
 	public int shootArrow(int caveId) 
 	{
+		
 		Cave cave = Map.getInstance().getCave(caveId);
+		
+		System.out.println("Player will attack the wumpus at position: "+cave.getId());
 		
 		if(cave.getType() == Cave.WUMPUS)
 		{
@@ -295,7 +301,8 @@ public class LogicalAgent implements Player
 		}	
 		else
 		{
-			if(moveWumpus(cave) == position)
+			System.out.println("Player has missed the wumpus :(");
+			if(moveWumpus() == position)
 				return -1;
 			
 		}	
@@ -328,70 +335,42 @@ public class LogicalAgent implements Player
 				return -2;
 			}
 			else
+			{	
 				return value;
+			}
 		}
 		
 		return -4;
 	}
 	
-	public int moveWumpus(Cave cave)
+	public int moveWumpus()
 	{
 		Random rand = new Random();
 		int move = rand.nextInt(3);
+		int wumpusPosition = -1;
 		
-		ArrayList<Cave> movements = Map.getInstance().getChamberEdges(cave.getId());
+		ArrayList<Cave> movements = Map.getInstance().getChamberEdges(position);
+		
+		for(Cave cave: movements)
+		{
+			if(cave.getType() == Cave.WUMPUS)
+			{
+				wumpusPosition = cave.getId();
+				break;
+			}	
+		}
+		
+		if(wumpusPosition != -1)
+			movements = Map.getInstance().getChamberEdges(wumpusPosition);
+		
 		movements.get(move).setType(Cave.WUMPUS);
+		knowledgeBase.setSmell(position, false);
 		
-		cave.setType(Cave.EMPTY);
+		Map.getInstance().getCave(wumpusPosition).setType(Cave.EMPTY);
+		
+		System.out.println("Wumpus has moved to the following position: "+movements.get(move).getId());
 				
 		return movements.get(move).getId();
 	}
-
-//	if(availableMovements.size() == 3)
-//	{	
-//		movement = rand.nextInt(3);
-//		return availableMovements.get(movement).getId();
-//	}
-//	else if(availableMovements.size() == 2)
-//	{
-//		movement = rand.nextInt(2);
-//		
-//		if(breeze == true)
-//		{
-//			ArrayList<Cave> pastCave = Map.getInstance().getChamberEdges(visitedCaves.get(0).getId());
-//			boolean back = true;
-//			
-//			for(int i =0; i<pastCave.size(); i++)
-//			{
-//				if(pastCave.get(i).hasPit())
-//					back = false;
-//			}
-//			
-//			if(back)
-//				return visitedCaves.get(0).getId();
-//			else if(smell == true)
-//			{
-//				Cave cave = availableMovements.get(movement);
-//				return attackWumpus(movement, cave);
-//			}
-//			else
-//				return availableMovements.get(movement).getId();
-//				
-//		}
-//		else if(smell == true)
-//		{
-//			Cave cave = availableMovements.get(movement);
-//			return attackWumpus(movement, cave);
-//		}
-//		else if(breeze == true && squish == true)
-//			return availableMovements.get(movement).getId();
-//		else if(smell == true && squish == true)
-//			return availableMovements.get(movement).getId();
-//		else
-//			return availableMovements.get(movement).getId();
-//			
-//	}
-//	else
-//		return availableMovements.get(0).getId();
 	
 }

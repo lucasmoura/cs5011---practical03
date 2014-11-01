@@ -265,6 +265,7 @@ public class Map
 		    while ((text = reader.readLine()) != null) 
 		    {
 		        gameMap.addVertex(id++, Integer.parseInt(text));
+		        gameMap.getCave(id-1).setType(Integer.parseInt(text));
 		    }
 		} 
 		catch (FileNotFoundException e)

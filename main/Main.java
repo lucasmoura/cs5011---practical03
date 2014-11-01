@@ -33,7 +33,7 @@ public class Main
 		while(status == LogicalAgent.CONTINUE)
 		{
 			status = player.move();
-			//pressAnyKeyToContinue();
+			pressAnyKeyToContinue();
 		}	
 		
 		

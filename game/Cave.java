@@ -7,19 +7,28 @@ public class Cave
 	public static final int BAT = 2;
 	public static final int WUMPUS = 3;
 	public static final int TREASURE = 4;
+	public static final int EXIT = 5;
 	
 	private int type;
 	private int id;
+	private boolean isExit;
 	
 	public Cave(int id, int type)
 	{
 		this.id = id;
 		this.type = type;
+		isExit = false;
 	}
 	
 	public void setType(int type)
 	{
-		this.type = type;
+		if(type == EXIT)
+		{
+			this.type = EMPTY;
+			setExit(true);
+		}	
+		else	
+			this.type = type;
 	}
 	
 	public int getType()
@@ -32,6 +41,16 @@ public class Cave
 		return id;
 	}
 	
+	public boolean isExit()
+	{
+		return isExit;
+	}
+
+	public void setExit(boolean isExit)
+	{
+		this.isExit = isExit;
+	}
+
 	public boolean hasPit()
 	{
 		return type==PIT?true:false;

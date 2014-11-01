@@ -17,28 +17,7 @@ public class KnowledgeBase
 {
 	
 	public class PremisseComparator implements Comparator<Premisse>
-	{
-
-//		public int compareCaves(int[] probability01, int[] probability02, int index)
-//		{
-//			if(probability01[index]==Cave.EMPTY)
-//				return -1;
-//			else if(probability02[index] == Cave.EMPTY)
-//				return 1;
-//			else if(probability01[index]==Cave.WUMPUS)
-//				return -1;
-//			else if(probability02[index] == Cave.WUMPUS)
-//				return 1;
-//			else if(probability01[index]==Cave.PIT)
-//				return -1;
-//			else if(probability02[index] == Cave.PIT)
-//				return 1;
-//			else if(probability01[index]==Cave.BAT)
-//				return -1;
-//			else
-//				return 1;
-//		}
-		
+	{		
 		@Override
 		public int compare(Premisse p1, Premisse p2)
 		{
@@ -97,38 +76,20 @@ public class KnowledgeBase
 				return -1;
 			
 		}	
-//			
-//			if(probability01[0] == probability02[0])
-//			{
-//				
-//				if(probability01[1] == probability02[1])
-//				{
-//					if(probability01[2] == probability02[2])
-//					{
-//						if(p1.getLocation()>p2.getLocation())
-//							return 1;
-//						else if(p1.getLocation()<p2.getLocation())
-//							return -1;
-//						else
-//							return 0;
-//					}
-//					else
-//						return compareCaves(probability01, probability02, 2);
-//				}
-//				else 
-//					return compareCaves(probability01, probability02, 1);
-//				
-//			}
-//			else
-//				return compareCaves(probability01, probability02, 0);
-//				
-//		}
 	}	
 		
 	private CaveInfo[] caveInfo;
+	private int exitCave;
+	private boolean hasTreasure;
+	private HashMap<Integer, Integer> exitPath;
+	private boolean hasExitPath;
 	
 	public KnowledgeBase()
 	{
+		exitCave = -1;
+		hasTreasure = hasExitPath = false;
+		exitPath = new HashMap<Integer, Integer>();
+		
 		caveInfo = new CaveInfo[21];
 		
 		for(int i =0; i<caveInfo.length; i++)
@@ -176,6 +137,95 @@ public class KnowledgeBase
 		}
 		
 		return visitedCaves;
+		
+	}
+	
+	public int goToExit(int actualPosition)
+	{
+		if(hasExitPath)
+		{
+			Integer target = getExitCave();
+			hasExitPath = true;
+			
+			while (target != null)
+			{
+			  Integer temp = target;
+			  System.out.println(target);
+			  target = exitPath.get(target);
+			  
+			  if(target == actualPosition)
+				  return temp;
+			  
+			}	
+			
+		}
+		
+		Queue<Integer> caves = new LinkedList<Integer>();
+		caves.add(actualPosition);
+		int find = 0;
+		
+		int[] storedCaves = new int[21];
+		Arrays.fill(storedCaves, 0);
+		
+		while(!caves.isEmpty())
+		{
+			Integer caveId = caves.poll();
+			storedCaves[caveId] = 1;
+			
+			System.out.println("Cave visited = "+caveId);
+			
+			if(caveId == getExitCave())
+			{
+				//System.out.println("Cave found!! for id: "+caveId);
+				find = 1;
+				break;
+			}	
+			
+			ArrayList<Cave> adjacentCaves = Map.getInstance().getChamberEdges(caveId);
+			
+			for(int i =0; i<adjacentCaves.size(); i++)
+			{
+				int id = adjacentCaves.get(i).getId();
+				//System.out.println("Cave "+id+" is visited? "+caveInfo[id].isVisited());
+		
+				if(caveInfo[id].hasBat() ||
+				   caveInfo[id].hasPit() ||	
+				   caveInfo[id].hasWumpus() ||
+				   (caveInfo[id].isVisited() == false)||
+				   storedCaves[id] == 1)
+				{
+					continue;
+				}
+				else
+				{
+					caves.add(id);
+					exitPath.put(id, caveId);
+				}	
+			}
+		}
+	
+		
+		if(find == 1)
+		{
+			Integer target = getExitCave();
+			hasExitPath = true;
+			
+			while (target != null)
+			{
+			  Integer temp = target;
+			  System.out.println(target);
+			  target = exitPath.get(target);
+			  
+			  if(target == actualPosition)
+				  return temp;
+			  
+			}	
+				
+		}
+		
+		return 0;
+		
+		
 		
 	}
 	
@@ -481,22 +531,6 @@ public class KnowledgeBase
 		boolean breeze = caveInfo[father].feelBreeze();
 		boolean sound = caveInfo[father].feelSound();
 		boolean smell = caveInfo[father].feelSmell();
-		
-		if(father ==18)
-		{
-			System.out.println("Father: "+father);
-			System.out.println("Inference: "+adjacentId);
-			
-			System.out.println("Breeze: "+breeze);
-			System.out.println("Sound: "+sound);
-			System.out.println("Smell: "+smell);
-			
-			System.out.println("Unknown: "+unknown);
-			System.out.println("Sensation[PIT] "+sensations[0]);
-			System.out.println("Sensation[WUMPUS] "+sensations[1]);
-			System.out.println("Sensation[BAT] "+sensations[2]);
-			
-		}
 //		
 		if(breeze && sound && !smell && sensations[0] == 1 && sensations[2] == 1 && unknown == 1)
 		{
@@ -703,7 +737,7 @@ public class KnowledgeBase
 //		
 //		if(premisses.isEmpty() == false)
 //			bestPremisse = premisses.get(0);
-		System.out.println("Best premisses size: "+bestPremisses.size());
+		//System.out.println("Best premisses size: "+bestPremisses.size());
 		return bestPremisses;
 	}
 	
@@ -802,6 +836,26 @@ public class KnowledgeBase
 	public void univisitCave(int cave)
 	{
 		caveInfo[cave].setVisited(false);
+	}
+	
+	public void setTreasure(boolean value)
+	{
+		hasTreasure = true;
+	}
+	
+	public boolean getTreasure()
+	{
+		return hasTreasure;
+	}
+	
+	public void setExit(int caveId)
+	{
+		exitCave = caveId;
+	}
+	
+	public int getExitCave()
+	{
+		return exitCave;
 	}
 	
 }

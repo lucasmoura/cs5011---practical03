@@ -410,21 +410,30 @@ public class KnowledgeBaseTest
 		knowledgeBase.setEmpty(4, true);
 		knowledgeBase.setSmell(4, false);
 		knowledgeBase.setSound(4, false);
+		knowledgeBase.univisitCave(4);
 		
 		knowledgeBase.setVisited(1);
 		knowledgeBase.setVisited(actualPosition);
 		knowledgeBase.setVisited(11);
-		knowledgeBase.setVisited(4);
+		//knowledgeBase.setVisited(4);
 		
 		Map.getInstance().getCave(11).setType(Cave.BAT);
 		Map.getInstance().getCave(6).setType(Cave.PIT);
 		Map.getInstance().getCave(3).setType(Cave.EMPTY);
 		
 		ArrayList<Premisse> premisses = knowledgeBase.ask(actualPosition);
+		
+		for(int i =0; i<premisses.size(); i++)
+		{
+			System.out.println("Premisse "+i);
+			System.out.println("Location: "+premisses.get(i).getLocation());
+			System.out.println("Father: "+premisses.get(i).getFather());
+			System.out.println("Probability: "+Arrays.toString(premisses.get(i).getProbability()));
+		}
 		Premisse premisse = premisses.get(0);
 		
-		int expectedFather = 1;
 		int expectedLocation = 2;
+		int expectedFather = 1;
 		
 		assertEquals(expectedLocation, premisse.getLocation());
 		assertEquals(expectedFather, premisse.getFather());
@@ -498,6 +507,42 @@ public class KnowledgeBaseTest
 		
 		knowledgeBase.setPit(4, false);
 		
+		
+	}
+	
+	@Test
+	public void getExitPathTest()
+	{
+		System.out.println("\ngetExitPathTest\n");
+		
+		int actualPosition = 3;
+		int[] nodes = {1, 3,4,11,12,17,13,14,9};
+		
+		knowledgeBase.setTreasure(true);
+		knowledgeBase.setExit(13);
+		
+		setVisitedNodes(nodes);
+		
+		int expectedValue = 1;
+		int actualValue = knowledgeBase.goToExit(actualPosition);
+		
+		assertEquals(expectedValue, actualValue);
+		
+		actualPosition = actualValue;
+		expectedValue = 11;
+		actualValue = knowledgeBase.goToExit(actualPosition);
+		
+		assertEquals(expectedValue, actualValue);
+		
+		resetVisitedNodes(nodes);
+		
+		
+		
+	}
+	
+	@Test
+	public void moveWumpus()
+	{
 		
 	}
 	
