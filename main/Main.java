@@ -21,9 +21,15 @@ public class Main
 	
 	public static void main(String[] args)
 	{
-		Map.getInstance().initMapWithFile();
+		//Map.getInstance().initMapWithFile();
+
+		Map.getInstance().initMap();
 		Map.getInstance().createTunnels();
-		//Map.getInstance().printMap();
+		Map.getInstance().generateMap();
+		Map.getInstance().drawMap();
+		Map.getInstance().printMap();
+		
+		//Map.getInstance().generateMap();
 		
 		Player player = new LogicalAgent(1);
 		int status =LogicalAgent.CONTINUE;
@@ -33,7 +39,7 @@ public class Main
 		while(status == LogicalAgent.CONTINUE)
 		{
 			status = player.move();
-			pressAnyKeyToContinue();
+			//pressAnyKeyToContinue();
 		}	
 		
 		

@@ -7,6 +7,11 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Random;
 
 public class Map 
 {
@@ -25,30 +30,188 @@ public class Map
 	{
 		gameMap = new Graph();
 	}
+	
+	private void createPath(int actualPosition, int destination)
+	{
+		Queue<Integer> path = new LinkedList<Integer>();
+		HashMap<Integer, Integer> pathMap = new HashMap<Integer, Integer>();
+		int[] stored = new int[21];
+		Arrays.fill(stored, 0);
+		
+		path.add(actualPosition);
+	
+		
+		while(!path.isEmpty())
+		{
+			Integer caveId = path.poll();
+			stored[caveId] = 1;
+			
+			
+			if(caveId == destination)
+			{
+				//System.out.println("Cave found");
+				break;
+			}
+				
+			
+			ArrayList<Cave> adjacentCaves = getChamberEdges(caveId);
+			
+			for(int i =0; i<adjacentCaves.size(); i++)
+			{
+				if(stored[adjacentCaves.get(i).getId()] == 0)
+				{
+					path.add(adjacentCaves.get(i).getId());
+					pathMap.put(adjacentCaves.get(i).getId(), caveId);
+					stored[caveId] = 1;
+				}
+			}
+		}
+		
+		Integer target = destination;
+		
+		while(target != null)
+		{
+			if(Map.getInstance().getCave(target).getType() == -1)
+				Map.getInstance().getCave(target).setType(Cave.EMPTY);
+			
+			target = pathMap.get(target);
+		}
+		
+	}
+	
+	public void generateMap()
+	{
+		int numCaves = 3;
+		int numBats = 2;
+		
+		//System.out.println("Starting position: "+1);
+		getCave(1).setType(Cave.EMPTY);
+		
+		Random rand = new Random();
+		int max = 20;
+		int min =1;
+		int exit = -1;
+		int cave = -1;
+		int bat = -1;
+		int wumpus = -1;
+		
+		do
+		{
+			exit = rand.nextInt((max - min) + 1) + min;
+		}while(exit == 1);
+		
+		int treasure = -1;
+		//System.out.println("Exit location: "+exit);
+		
+		getCave(exit).setType(Cave.EXIT);
+		
+		do
+		{
+			treasure = rand.nextInt((max - min) + 1) + min;
+			
+		}while(exit == treasure);
+		
+		//System.out.println("Treasure location: "+treasure);
+		getCave(treasure).setType(Cave.TREASURE);
+		
+		//System.out.println("\nCreate treasure path\n");
+		createPath(1, treasure);
+		
+		//System.out.println("\nCreate exit path\n");
+		createPath(treasure, exit);
+
+		
+		boolean valid = false;
+		
+		for(int i =0; i<numBats; i++)
+		{
+			do
+			{
+				bat = rand.nextInt((max - min) + 1) + min;
+				//System.out.println(cave);
+				
+				if(getCave(bat).getType() != -1)
+					valid = false;
+				else
+					valid = true;
+				
+			}while(!valid);
+			
+			getCave(bat).setType(Cave.BAT);
+		}
+		
+		valid = false;
+		
+		do
+		{
+			wumpus = rand.nextInt((max - min) + 1) + min;
+			
+			if(getCave(wumpus).getType() != -1)
+				valid = false;
+			else
+				valid = true;
+			
+		}while(!valid);
+		
+		getCave(wumpus).setType(Cave.WUMPUS);
+		
+		
+		
+		for(int i =0; i<numCaves; i++)
+		{
+			
+			do
+			{
+				cave = rand.nextInt((max - min) + 1) + min;
+				//System.out.println(cave);
+				
+				if(getCave(cave).getType() != -1)
+					valid = false;
+				else
+					valid = true;
+				
+			}while(!valid);
+			
+			getCave(cave).setType(Cave.PIT);
+				
+		}
+		
+		for(int i =1; i<=20; i++)
+		{
+			Cave c = getCave(i);
+			
+			if(c.getType() == -1)
+				c.setType(Cave.EMPTY);
+			
+			//System.out.println("Cave id: "+c.getId() +", with type: "+c.getType());
+			
+		}
+		
+	}
 
 	
 	public void initMap()
 	{
-		gameMap.addVertex(1, 0);
-		gameMap.addVertex(2, 0);
-		gameMap.addVertex(3, 0);
-		gameMap.addVertex(4, 0);
-		gameMap.addVertex(5, 0);
-		gameMap.addVertex(6, 0);
-		gameMap.addVertex(7, 0);
-		gameMap.addVertex(8, 0);
-		gameMap.addVertex(9, 0);
-		gameMap.addVertex(10, 0);
-		gameMap.addVertex(11, 0);
-		gameMap.addVertex(12, 0);
-		gameMap.addVertex(13, 0);
-		gameMap.addVertex(14, 0);
-		gameMap.addVertex(15, 0);
-		gameMap.addVertex(16, 0);
-		gameMap.addVertex(17, 0);
-		gameMap.addVertex(18, 0);
-		gameMap.addVertex(19, 0);
-		gameMap.addVertex(20, 0);
+		gameMap.addVertex(1, -1);
+		gameMap.addVertex(2, -1);
+		gameMap.addVertex(3, -1);
+		gameMap.addVertex(4, -1);
+		gameMap.addVertex(5, -1);
+		gameMap.addVertex(6, -1);
+		gameMap.addVertex(7, -1);
+		gameMap.addVertex(8, -1);
+		gameMap.addVertex(9, -1);
+		gameMap.addVertex(10, -1);
+		gameMap.addVertex(11, -1);
+		gameMap.addVertex(12, -1);
+		gameMap.addVertex(13, -1);
+		gameMap.addVertex(14, -1);
+		gameMap.addVertex(15, -1);
+		gameMap.addVertex(16, -1);
+		gameMap.addVertex(17, -1);
+		gameMap.addVertex(18, -1);
+		gameMap.addVertex(19, -1);
+		gameMap.addVertex(20, -1);
 	}
 	
 	private void initCave1()
@@ -305,6 +468,34 @@ public class Map
 	public void clear()
 	{
 		gameMap.clear();
+	}
+	
+	public String convert(int type)
+	{
+		switch(type)
+		{
+			case 0:
+				return "E";
+			case 1:
+				return "P";
+			case 2:
+				return "B";
+			case 3:
+				return "W";
+			case 4:
+				return "T";
+			case 5:
+				return "X";
+		}
+		
+		return null;
+	}
+	
+	public void drawMap()
+	{
+		String map = " \n                                                     ,:.                                                    \n                                                    .."+getCave(20).getId()+"..                                                   \n                                                   ..."+convert(getCave(20).getType())+"...                                                   \n                                                 ...........                                                \n                                               *****  *  *****                                              \n                                            *****     **    ****                                            \n                                          *****       **      *****                                         \n                                        ****          **        *****                                       \n                                     *****            **           ****                                     \n                                   ****               **             *****                                  \n                                 ****                ...                ****                                \n                              *****                 .."+getCave(19).getId()+"..                 *****                             \n                            ****                   ..."+convert(getCave(19).getType())+"....                  *****                           \n                          ****                    ***   ***                    ****                         \n                       *****                    ***      ****                    *****                      \n                     ****                      ***         ***                     *****                    \n                  *****                      ***             ***                      ****                  \n                *****                       ***               ****                      *****               \n              ****                        ***                   ***                       *****             \n           *****                       *****                     ****                        ****           \n         *****                        *****                        *****                       *****        \n       ****                       ...."+getCave(17).getId()+"....                       ...."+getCave(18).getId()+".....                    *****      \n   ......                        ....."+convert(getCave(17).getType())+".....                      ....."+convert(getCave(18).getType())+"....                       ..."+getCave(16).getId()+".. \n  ..."+getCave(11).getId()+"..                   *****   ....  ***                   ***      *******                    ..."+convert(getCave(16).getType())+".. \n  ..."+convert(getCave(11).getType())+"..****               *****           *****             *****            *******           ****...... \n    **      ****....."+getCave(12).getId()+"...                  .."+getCave(13).getId()+"..************.."+getCave(14).getId()+"..              *****...."+getCave(15).getId()+"...***   **    \n     **         ....."+convert(getCave(12).getType())+"....                  ..."+convert(getCave(13).getType())+"..************..."+convert(getCave(14).getType())+"..                   ....."+convert(getCave(15).getType())+"....     **    \n     ***          .......                   **                ***                      ***           **     \n      **             ***                   ***                 **                     ***            **     \n       **             ***                  **                   **                   ***            **      \n       **              ***                **                    **                  ***            ***      \n        **              ***               **                     **                ***             **       \n        **               ***             **                      ***              ***             ***       \n         **               ***            **                       **             ***              **        \n         ***               ***        .."+getCave(7).getId()+"..                       .."+getCave(9).getId()+"..         ***              **         \n          **                ...      ..."+convert(getCave(7).getType())+"...                      .."+convert(getCave(9).getType())+"..        ***               **         \n          ***               .."+getCave(6).getId()+"..****........                   ......****..."+getCave(10).getId()+"...              **          \n           **               .."+convert(getCave(6).getType())+"..         ****               ****        ...."+convert(getCave(10).getType())+"....              **          \n            **               ***             ****          *****           .....               **           \n            **               ***               *****     ****               **                ***           \n             **               **                  ...."+getCave(8).getId()+"....                 **                **            \n             **               **                   ..."+convert(getCave(8).getType())+"...                  **               **             \n              **              **                    ....                    **               **             \n              ***             **                     **                     **              **              \n               **              **                    **                     **              **              \n               ***             **                    **                    **              **               \n                **             **                    ***                   **              **               \n                 **            **            *****..."+getCave(4).getId()+"...**                **             **                \n                 **            ***        *****......"+convert(getCave(4).getType())+".....******         **            ***                \n                  **          .."+getCave(3).getId()+"...********                  *******...."+getCave(5).getId()+"..           **                 \n                  **          .."+convert(getCave(3).getType())+"...                                   ..."+convert(getCave(5).getType())+"...          **                  \n                   **        ***                                           ****         **                  \n                   ***      ***                                              ***       **                   \n                    **     ***                                                 ***     **                   \n                    ***   ***                                                   ***   **                    \n                     **  **                                                      ***  **                    \n                      ....                                                       ......                     \n                     ..."+getCave(1).getId()+"...****************************************************..."+getCave(2).getId()+"...                    \n                     ..."+convert(getCave(1).getType())+"....***************************************************..."+convert(getCave(2).getType())+".... ";
+		System.out.println(map);
+		System.out.println();
 	}
 	
 	
