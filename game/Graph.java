@@ -3,6 +3,8 @@ package game;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import util.GameOutput;
+
 public class Graph
 {
 
@@ -24,21 +26,27 @@ public class Graph
 	{
 		
 		System.out.println("Printing graph structure...");
+		GameOutput.getInstance().writeToFile("Printing graph structure...\n\n");
 		
 		for (Integer caveId: vertexMap.keySet()) 
 		{
 			
 			System.out.println("Cave: "+ caveId);
+			GameOutput.getInstance().writeToFile("Cave: "+ caveId+"\n");
 			System.out.println("Type: "+caves[caveId].getType());
+			GameOutput.getInstance().writeToFile("Type:  "+caves[caveId].getType()+"\n");
 			System.out.println("Total Edges: "+vertexMap.get(caveId).size());
+			GameOutput.getInstance().writeToFile("Total Edges: "+vertexMap.get(caveId).size()+"\n");
 			
 			for (Cave cave : vertexMap.get(caveId)) 
 			{
 				int id = cave.getId();
 				System.out.println(caveId + "-->" + id);
+				GameOutput.getInstance().writeToFile(caveId + "-->" + id+"\n");
 			}
 			
 			System.out.println();
+			GameOutput.getInstance().writeToFile("\n\n");
 		}
 	}
 	

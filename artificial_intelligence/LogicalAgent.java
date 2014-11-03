@@ -3,6 +3,8 @@ package artificial_intelligence;
 import java.util.ArrayList;
 import java.util.Random;
 
+import util.GameOutput;
+
 import game.Cave;
 import game.Map;
 import game.Player;
@@ -78,21 +80,32 @@ public class LogicalAgent implements Player
 		breeze = smell = squish = false;
 		
 		if(status == DEAD)
+		{
+			System.out.println("The player has died...");
+			GameOutput.getInstance().writeToFile("\nThe player has died...\n");
 			return GAMEOVER;
+		}
 		else if(status == WON)
 		{
+			GameOutput.getInstance().writeToFile("\nThe player has won the game \\o/ !!!!n");
 			return VICTORY;
 		}
 		else if(status == BAT)
 		{
 			System.out.println("\nPlayer has encountered a Bat!!!\n");
+			GameOutput.getInstance().writeToFile("\nPlayer has encountered a Bat!!!\n");
+			
 			position = generateNewPosition();
 			System.out.println("Player new position is: "+position);
+			GameOutput.getInstance().writeToFile("\nPlayer new position is: "+position+"\n");
+			
 			return CONTINUE;
 		}
 		else if(status == TREASURE && !searchExit)
 		{
 			System.out.println("Player has collected the Treasure!!!");
+			GameOutput.getInstance().writeToFile("\nPlayer has collected the Treasure!!!\n");
+			GameOutput.getInstance().writeToFile("\nPlayer will start looking for the exit\n");
 			searchExit = true;
 			status = ALIVE;
 			return CONTINUE;
@@ -102,6 +115,7 @@ public class LogicalAgent implements Player
 		{
 			System.out.println("Player is moving to the exit..");
 			position = knowledgeBase.goToExit(position);
+			GameOutput.getInstance().writeToFile("\nPlayer is moving to the exit: "+position+ "\n");
 			
 			if(position == knowledgeBase.getExitCave())
 			{
@@ -130,11 +144,25 @@ public class LogicalAgent implements Player
 			{
 				if(premisses.get(i).getFather() == pastPosition || premisses.get(i).getLocation() == pastPosition)
 					continue;
-				else
+				else if(premisses.get(i).getFather() == caves[0] || premisses.get(i).getLocation() == caves[0] || 
+						premisses.get(i).getFather() == caves[1] || premisses.get(i).getLocation() == caves[1] ||
+						premisses.get(i).getFather() == caves[2] || premisses.get(i).getLocation() == caves[2])
+					
 				{
-					bestPremisse = premisses.get(i);
-					break;
+					advancePremisses.add(premisses.get(i));
 				}
+			}
+			
+			if(advancePremisses.size()==0)
+			{
+				GameOutput.getInstance().writeToFile("Entrou aqui");
+				GameOutput.getInstance().writeToFile("\nPast Position: "+pastPosition+"\n");
+				bestPremisse = premisses.get(0);
+			}
+			else
+			{
+				Random rand = new Random();
+				bestPremisse = advancePremisses.get(rand.nextInt(advancePremisses.size()));
 			}
 		}
 		else
@@ -150,7 +178,7 @@ public class LogicalAgent implements Player
 				}
 			}
 			
-			System.out.println("Advance size: "+advancePremisses.size());
+			//System.out.println("Advance size: "+advancePremisses.size());
 			Random rand = new Random();
 			
 			if(advancePremisses.size() > 0)
@@ -177,7 +205,8 @@ public class LogicalAgent implements Player
 		
 		for(int i =0; i<adjacentCaves.size(); i++)
 		{
-			if(bestPremisse.getLocation() == adjacentCaves.get(i).getId())
+			if(bestPremisse.getLocation() == adjacentCaves.get(i).getId() &&
+					bestPremisse.getLocation() != pastPosition)
 			{
 				pastPosition = position;
 				position = bestPremisse.getLocation();
@@ -194,6 +223,7 @@ public class LogicalAgent implements Player
 		}
 		
 		System.out.println("Player has moved to the following position: "+position);
+		GameOutput.getInstance().writeToFile("\nPlayer has moved to the following position: "+position+"\n");
 		
 		return CONTINUE;
 		
@@ -284,10 +314,12 @@ public class LogicalAgent implements Player
 		Cave cave = Map.getInstance().getCave(caveId);
 		
 		System.out.println("Player will attack the wumpus at position: "+cave.getId());
+		GameOutput.getInstance().writeToFile("\nPlayer will attack the wumpus at position: "+cave.getId()+"\n");
 		
 		if(cave.getType() == Cave.WUMPUS)
 		{
 			System.out.println("Player has killed the wumpus");
+			GameOutput.getInstance().writeToFile("Player has killed the wumpus\n");
 			knowledgeBase.setVisited(cave.getId());
 			knowledgeBase.setEmpty(cave.getId(), true);
 			knowledgeBase.setBat(cave.getId(), false);
@@ -300,6 +332,7 @@ public class LogicalAgent implements Player
 		else
 		{
 			System.out.println("Player has missed the wumpus :(");
+			GameOutput.getInstance().writeToFile("Player has missed the wumpus :(\n");
 			if(moveWumpus() == position)
 				return -1;
 			
@@ -314,6 +347,9 @@ public class LogicalAgent implements Player
 			return -3;
 		
 		int[] probability = premisse.getProbability();
+		
+		if(premisse.getFather() != position)
+			return -3;
 		
 		if(probability[0] == Cave.WUMPUS )
 		{
@@ -367,6 +403,8 @@ public class LogicalAgent implements Player
 		Map.getInstance().getCave(wumpusPosition).setType(Cave.EMPTY);
 		
 		System.out.println("Wumpus has moved to the following position: "+movements.get(move).getId());
+		GameOutput.getInstance().writeToFile("\nWumpus has moved to the following position: "
+				+movements.get(move).getId()+"\n");
 				
 		return movements.get(move).getId();
 	}

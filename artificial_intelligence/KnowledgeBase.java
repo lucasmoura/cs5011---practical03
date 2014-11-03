@@ -12,6 +12,8 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Stack;
 
+import util.GameOutput;
+
 public class KnowledgeBase
 {
 	
@@ -171,7 +173,7 @@ public class KnowledgeBase
 			Integer caveId = caves.poll();
 			storedCaves[caveId] = 1;
 			
-			System.out.println("Cave visited = "+caveId);
+			//System.out.println("Cave visited = "+caveId);
 			
 			if(caveId == getExitCave())
 			{
@@ -212,7 +214,7 @@ public class KnowledgeBase
 			while (target != null)
 			{
 			  Integer temp = target;
-			  System.out.println(target);
+			  //System.out.println(target);
 			  target = exitPath.get(target);
 			  
 			  if(target == actualPosition)
@@ -693,11 +695,25 @@ public class KnowledgeBase
 	public ArrayList<Premisse> ask(int actualPosition)
 	{
 		ArrayList<Cave> visitedCaves = createVisitedCaves(actualPosition);
+		System.out.print("\nVisited cave: ");
+		GameOutput.getInstance().writeToFile("\nVisited caves: ");
 		
-//		for(Cave c : visitedCaves)
-//			System.out.println("Visited cave: "+c.getId());
+		for(int i =0; i<visitedCaves.size(); i++)
+		{
+			Cave c = visitedCaves.get(i);
+			System.out.print(c.getId());
+			GameOutput.getInstance().writeToFile(String.valueOf(c.getId()));
+			
+			if(i != visitedCaves.size() -1)
+			{
+				System.out.print(", ");
+				GameOutput.getInstance().writeToFile(", ");
+			}	
+			
+		}
 		
 		System.out.println();
+		GameOutput.getInstance().writeToFile("\n");
 		
 		ArrayList<Premisse> premisses = generatePremisses(visitedCaves, actualPosition);
 		ArrayList<Premisse> bestPremisses = new ArrayList<Premisse>();
@@ -744,15 +760,22 @@ public class KnowledgeBase
 	{
 		
 		System.out.println();
+		GameOutput.getInstance().writeToFile("\nDisplaying generated Premisses: \n\n");
 		
 		for(int i =0; i<premisses.size(); i++)
 		{
 			System.out.println("Premisse: "+i);
+			GameOutput.getInstance().writeToFile("Premisse: "+i+"\n");
 			System.out.println("Generator: "+premisses.get(i).getGenerator());
+			GameOutput.getInstance().writeToFile("Generator: "+premisses.get(i).getGenerator()+"\n");
 			System.out.println("Father: "+premisses.get(i).getFather());
+			GameOutput.getInstance().writeToFile("Father: "+premisses.get(i).getFather()+"\n");
 			System.out.println("Location: "+premisses.get(i).getLocation());
+			GameOutput.getInstance().writeToFile("Location: "+premisses.get(i).getLocation()+"\n");
 			System.out.println("Probability: "+Arrays.toString(premisses.get(i).getProbability()));
+			GameOutput.getInstance().writeToFile("Probability: "+Arrays.toString(premisses.get(i).getProbability())+"\n");
 			System.out.println();
+			GameOutput.getInstance().writeToFile("\n");
 		}
 		
 	}
