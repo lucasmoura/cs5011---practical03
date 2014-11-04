@@ -24,9 +24,10 @@ public class Main
 	{
 
 		GameOutput.getInstance().init();
-		Map.getInstance().initMap();
+		//Map.getInstance().initMap();
+		Map.getInstance().initMapWithFile();
 		Map.getInstance().createTunnels();
-		Map.getInstance().generateMap();
+		//Map.getInstance().generateMap();
 		Map.getInstance().drawMap();
 		//Map.getInstance().printMap();
 		//pressAnyKeyToContinue();

@@ -1,10 +1,17 @@
 package util;
 
+import game.Map;
+
 public class Util 
 {
 	
-	public static String convertType(int type)
+	public static String convertType(int id)
 	{
+		if(Map.getInstance().getCave(id).isExit())
+			return "X";
+		
+		int type = Map.getInstance().getCave(id).getType();
+		
 			switch(type)
 			{
 				case 0:
@@ -17,8 +24,6 @@ public class Util
 					return "W";
 				case 4:
 					return "T";
-				case 5:
-					return "X";
 			}
 			
 			return null;

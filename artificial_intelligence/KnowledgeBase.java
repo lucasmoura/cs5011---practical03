@@ -236,7 +236,9 @@ public class KnowledgeBase
 		
 		find = size = 0;
 		
-		if(caveInfo[actualPosition].hasBat() ||
+		if(actualPosition == location)
+			find = size = 0;
+		else if(caveInfo[actualPosition].hasBat() ||
 		   caveInfo[actualPosition].hasPit() ||
 		   caveInfo[actualPosition].hasWumpus())
 		{
@@ -276,7 +278,12 @@ public class KnowledgeBase
 				int id = adjacentCaves.get(i).getId();
 				//System.out.println("Cave "+id+" is visited? "+caveInfo[id].isVisited());
 		
-				if(caveInfo[id].hasBat() ||
+				if(id == location)
+				{
+					caves.add(id);
+					parentMap.put(id, caveId);
+				}
+				else if(caveInfo[id].hasBat() ||
 				   caveInfo[id].hasPit() ||	
 				   caveInfo[id].hasWumpus() ||
 				   (caveInfo[id].isVisited() == false && id != location)||
@@ -301,7 +308,7 @@ public class KnowledgeBase
 			
 			while (target != null)
 			{
-			  //System.out.println(target);
+			  
 			  size++;
 			  target = parentMap.get(target);
 			  
@@ -336,7 +343,8 @@ public class KnowledgeBase
 			if(caveInfo[id].isVisited() == true || valid)
 				answer = bfs(id, location, actualPosition);
 			
-//			System.out.println("For location: " + location +
+//			if(actualPosition == 8)
+//				System.out.println("For location: " + location +
 //					" caveId: "+id+"\nAswer (found: "+answer[0]+", size: "+answer[1]+")\n");
 			
 			if(answer[0] ==1)
@@ -359,6 +367,7 @@ public class KnowledgeBase
 	public ArrayList<Premisse> generatePremisses(ArrayList<Cave> visitedCaves, int actualPosition)
 	{
 		ArrayList<Premisse> premisses = new ArrayList<Premisse>();
+		System.out.println("Actual Position: "+actualPosition);
 		
 		for(int i =0; i<visitedCaves.size(); i++)
 		{
@@ -368,7 +377,7 @@ public class KnowledgeBase
 			ArrayList<Cave> adjacentCaves = Map.getInstance().getChamberEdges(id);
 			CaveInfo cave = caveInfo[id];
 			
-			if(cave.hasBat() || cave.hasPit())
+			if(cave.hasBat() || cave.hasPit() || cave.hasWumpus())
 				continue;
 			
 			boolean breeze = cave.feelBreeze();
@@ -399,7 +408,7 @@ public class KnowledgeBase
 						case Cave.BAT:
 							sound = false;
 							//System.out.println("Add premisse with location: "+adjacentId);
-							premisse = new Premisse(adjacentId, id);
+							premisse = new Premisse(adjacentId, findFather(actualPosition, adjacentId, id));
 							premisse.setGenerator(id);
 							premisse.setProbability(Cave.BAT);
 							premisses.add(premisse);
@@ -408,7 +417,7 @@ public class KnowledgeBase
 						case Cave.PIT:
 							breeze = false;
 							//System.out.println("Add premisse with location: "+adjacentId);
-						    premisse = new Premisse(adjacentId, id);
+						    premisse = new Premisse(adjacentId, findFather(actualPosition, adjacentId, id));
 						    premisse.setGenerator(id);
 						    premisse.setProbability(Cave.PIT);
 						    premisses.add(premisse);
@@ -417,7 +426,7 @@ public class KnowledgeBase
 						case Cave.WUMPUS:
 							smell = false;
 							//System.out.println("Add premisse with location: "+adjacentId);
-							premisse = new Premisse(adjacentId, id);
+							premisse = new Premisse(adjacentId, findFather(actualPosition, adjacentId, id));
 							premisse.setGenerator(id);
 							premisse.setProbability(Cave.WUMPUS);
 							premisses.add(premisse);
