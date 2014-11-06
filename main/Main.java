@@ -23,53 +23,80 @@ public class Main
 	public static void main(String[] args)
 	{
 
-		GameOutput.getInstance().init();
+		
 		//Map.getInstance().initMap();
 		Map.getInstance().initMapWithFile();
+		//Map.getInstance().generateMap();
 		Map.getInstance().createTunnels();
-		//Map.getInstance().generateMap();
-		Map.getInstance().drawMap();
-		//Map.getInstance().printMap();
-		//pressAnyKeyToContinue();
 		
-		//Map.getInstance().generateMap();
+		int numVictories =0;
+		int totalKill = 0;
+		int loopValue = 100;
+		int totalBatEncounters = 0;
 		
-		Player player = new LogicalAgent(1);
-		int status =LogicalAgent.CONTINUE;
-		
-		String playerStart = "\n\nPlayer starting at position: "+((LogicalAgent) player).getPosition()+"\n";
-		GameOutput.getInstance().writeToFile(playerStart);
-		System.out.print(playerStart);
-		
-		while(status == LogicalAgent.CONTINUE)
+		for(int i =0; i<loopValue; i++)
 		{
-			status = player.move();
+			//Map.getInstance().generateMap();
+			Map.getInstance().initMapWithFile();
+			GameOutput.getInstance().init();
 			Map.getInstance().drawMap();
+			
+			//Map.getInstance().generateMap();
+			
+			Player player = new LogicalAgent(1);
+			int status =LogicalAgent.CONTINUE;
+			
+			String playerStart = "\n\nPlayer starting at position: "
+					+((LogicalAgent) player).getPosition()+"\n";
+			GameOutput.getInstance().writeToFile(playerStart);
+			System.out.print(playerStart);
+			
+			while(status == LogicalAgent.CONTINUE)
+			{
+				status = player.move();
+				Map.getInstance().drawMap();
+				//pressAnyKeyToContinue();
+			}	
+			
+			String playerStatus = "";
+			
+			switch(((LogicalAgent) player).getStatus())
+			{
+				case 0:
+					playerStatus = "alive";
+					break;
+				
+				case 1:
+					playerStatus = "dead";
+					break;
+				
+				case 4:
+					playerStatus = "victorious";
+					numVictories++;
+					break;
+				
+			}
+			
 			//pressAnyKeyToContinue();
-		}	
-		
-		String playerStatus = "";
-		
-		switch(((LogicalAgent) player).getStatus())
-		{
-			case 0:
-				playerStatus = "alive";
-				break;
+			totalKill += (((LogicalAgent) player).hasKillWumpus() == true? 1: 0);
+			totalBatEncounters += (((LogicalAgent) player).hasBatAttack() == true? 1: 0);
 			
-			case 1:
-				playerStatus = "dead";
-				break;
+//			System.out.println((((LogicalAgent) player).hasKillWumpus() == true? 1: 0));
+//			pressAnyKeyToContinue();
 			
-			case 4:
-				playerStatus = "victorious";
-				break;
+			
+			System.out.println("Game finished with player status: "+playerStatus);
+			GameOutput.getInstance().writeToFile("\nGame finished with player status: "+playerStatus+"\n");
+			GameOutput.getInstance().close();
 			
 		}
 		
-		
-		System.out.println("Game finished with player status: "+playerStatus);
-		GameOutput.getInstance().writeToFile("\nGame finished with player status: "+playerStatus+"\n");
-		GameOutput.getInstance().close();
+		System.out.println();
+		System.out.println(".........Result for running the game "+loopValue + " times..........");
+		System.out.println("Number of victories: "+numVictories);
+		System.out.println("Number of defeats: "+(100-numVictories));
+		System.out.println("Killed wumpus in exactly: "+totalKill + (totalKill==1?" time":" times"));
+		System.out.println("Bat attacked the player in exactly "+totalBatEncounters +(totalBatEncounters==1?" time":" times") );
 		
 	}
 

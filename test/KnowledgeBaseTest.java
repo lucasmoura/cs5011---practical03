@@ -12,6 +12,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import util.GameOutput;
+
 import artificial_intelligence.KnowledgeBase;
 import artificial_intelligence.Premisse;
 
@@ -27,6 +29,7 @@ public class KnowledgeBaseTest
 		map = Map.getInstance();
 		map.initMap();
 		map.createTunnels();
+		GameOutput.getInstance().init();
 		
 		knowledgeBase = new KnowledgeBase();
 		
